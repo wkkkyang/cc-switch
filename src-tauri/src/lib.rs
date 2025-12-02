@@ -493,20 +493,41 @@ pub fn run() {
             // 构建托盘
             let mut tray_builder = TrayIconBuilder::with_id("main")
                 .on_tray_icon_event(|tray, event| {
-                    // Handle left click to show main window
-                    if let tauri::tray::TrayIconEvent::Click { .. } = event {
-                        if let Some(window) = tray.app_handle().get_webview_window("main") {
-                            #[cfg(target_os = "windows")]
-                            {
-                                let _ = window.set_skip_taskbar(false);
+                    match event {
+                        tauri::tray::TrayIconEvent::Click { .. } => {
+                            // Left click: show main window
+                            if let Some(window) = tray.app_handle().get_webview_window("main") {
+                                #[cfg(target_os = "windows")]
+                                {
+                                    let _ = window.set_skip_taskbar(false);
+                                }
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                #[cfg(target_os = "macos")]
+                                {
+                                    tray::apply_tray_policy(tray.app_handle(), true);
+                                }
                             }
-                            let _ = window.unminimize();
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                            #[cfg(target_os = "macos")]
-                            {
-                                tray::apply_tray_policy(tray.app_handle(), true);
+                        }
+                        tauri::tray::TrayIconEvent::DoubleClick { .. } => {
+                            // Double click: also show main window
+                            if let Some(window) = tray.app_handle().get_webview_window("main") {
+                                #[cfg(target_os = "windows")]
+                                {
+                                    let _ = window.set_skip_taskbar(false);
+                                }
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                #[cfg(target_os = "macos")]
+                                {
+                                    tray::apply_tray_policy(tray.app_handle(), true);
+                                }
                             }
+                        }
+                        _ => {
+                            // Other events (including right click) will use default behavior
                         }
                     }
                 })
@@ -514,7 +535,7 @@ pub fn run() {
                 .on_menu_event(|app, event| {
                     tray::handle_tray_menu_event(app, &event.id.0);
                 })
-                .show_menu_on_left_click(true); // Keep menu on left click for now
+                .show_menu_on_left_click(false);
 
             // 统一使用应用默认图标；待托盘模板图标就绪后再启用
             if let Some(icon) = app.default_window_icon() {
