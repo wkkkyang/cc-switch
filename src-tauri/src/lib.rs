@@ -337,8 +337,9 @@ pub fn run() {
             // Disable webview context menu to prevent unwanted options
             #[cfg(desktop)]
             if let Some(window) = app.get_webview_window("main") {
+                // Try to disable context menu by setting an empty handler
                 let _ = window.on_menu_event(|_, _| {
-                    // Do nothing - this prevents the default context menu
+                    // Do nothing - this should prevent the default context menu
                 });
             }
 
@@ -535,7 +536,7 @@ pub fn run() {
                             }
                         }
                         _ => {
-                            // Other events will use default behavior
+                            // Do not handle other events to let system handle them (right-click menu)
                         }
                     }
                 })

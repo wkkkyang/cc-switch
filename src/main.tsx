@@ -25,6 +25,11 @@ try {
   // 忽略平台检测失败
 }
 
+// 禁用右键菜单以防止出现"返回"、"刷新"等选项
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+});
+
 // 配置加载错误payload类型
 interface ConfigLoadErrorPayload {
   path?: string;
