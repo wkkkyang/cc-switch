@@ -16,7 +16,6 @@ import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { WindowSettings } from "@/components/settings/WindowSettings";
 import { DirectorySettings } from "@/components/settings/DirectorySettings";
 import { ImportExportSection } from "@/components/settings/ImportExportSection";
-import { AboutSection } from "@/components/settings/AboutSection";
 import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useTranslation } from "react-i18next";
@@ -162,14 +161,13 @@ export function SettingsPage({
           onValueChange={setActiveTab}
           className="flex flex-col h-full"
         >
-          <TabsList className="grid w-full grid-cols-3 mb-6 glass rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 mb-6 glass rounded-xl">
             <TabsTrigger value="general">
               {t("settings.tabGeneral")}
             </TabsTrigger>
             <TabsTrigger value="advanced">
               {t("settings.tabAdvanced")}
             </TabsTrigger>
-            <TabsTrigger value="about">{t("common.about")}</TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2">
@@ -240,9 +238,6 @@ export function SettingsPage({
               ) : null}
             </TabsContent>
 
-            <TabsContent value="about" className="mt-0">
-              <AboutSection isPortable={isPortable} />
-            </TabsContent>
           </div>
         </Tabs>
       )}

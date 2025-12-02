@@ -492,16 +492,36 @@ pub fn run() {
 
             // 构建托盘
             let mut tray_builder = TrayIconBuilder::with_id("main")
-                .on_tray_icon_event(|_tray, event| match event {
-                    // 左键点击已通过 show_menu_on_left_click(true) 打开菜单，这里不再额外处理
-                    TrayIconEvent::Click { .. } => {}
+                .on_tray_icon_event(|tray, event| match event {
+                    TrayIconEvent::Click { .. } => {
+                        // 左键点击显示主窗口
+                        if let Some(app) = tray.app_handle() {
+                            if let Some(window) = app.get_webview_window("main") {
+                                #[cfg(target_os = "windows")]
+                                {
+                                    let _ = window.set_skip_taskbar(false);
+                                }
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                #[cfg(target_os = "macos")]
+                                {
+                                    tray::apply_tray_policy(app, true);
+                                }
+                            }
+                        }
+                    }
+                    TrayIconEvent::RightClick { .. } => {
+                        // 右键点击显示菜单
+                        let _ = tray.show_menu();
+                    }
                     _ => log::debug!("unhandled event {event:?}"),
                 })
                 .menu(&menu)
                 .on_menu_event(|app, event| {
                     tray::handle_tray_menu_event(app, &event.id.0);
                 })
-                .show_menu_on_left_click(true);
+                .show_menu_on_left_click(false);
 
             // 统一使用应用默认图标；待托盘模板图标就绪后再启用
             if let Some(icon) = app.default_window_icon() {

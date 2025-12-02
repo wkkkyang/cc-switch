@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export type ResourceType = "provider" | "prompt" | "mcp" | "skill";
+export type ResourceType = "provider" | "prompt" | "mcp";
 
 export interface DeepLinkImportRequest {
   version: string;
@@ -29,10 +29,6 @@ export interface DeepLinkImportRequest {
   // MCP fields
   apps?: string; // "claude,codex,gemini"
 
-  // Skill fields
-  repo?: string;
-  directory?: string;
-  branch?: string;
 
   // Config file fields
   config?: string;
@@ -58,7 +54,6 @@ export type ImportResult =
       importedIds: string[];
       failed: Array<{ id: string; error: string }>;
     }
-  | { type: "skill"; key: string };
 
 export const deeplinkApi = {
   /**

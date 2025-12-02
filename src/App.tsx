@@ -7,7 +7,6 @@ import {
   Settings,
   ArrowLeft,
   // Bot, // TODO: Agents 功能开发中，暂时不需要
-  Book,
   Server,
   RefreshCw,
 } from "lucide-react";
@@ -32,12 +31,11 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
 import UsageScriptModal from "@/components/UsageScriptModal";
-import PromptPanel from "@/components/prompts/PromptPanel";
 import { DeepLinkImportDialog } from "@/components/DeepLinkImportDialog";
 import { AgentsPanel } from "@/components/agents/AgentsPanel";
 import { Button } from "@/components/ui/button";
 
-type View = "providers" | "settings" | "prompts" | "agents";
+type View = "providers" | "settings" | "agents";
 
 function App() {
   const { t } = useTranslation();
@@ -52,7 +50,6 @@ function App() {
   const [envConflicts, setEnvConflicts] = useState<EnvConflict[]>([]);
   const [showEnvBanner, setShowEnvBanner] = useState(false);
 
-  const promptPanelRef = useRef<any>(null);
   const addActionButtonClass =
     "bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40 rounded-full w-8 h-8";
 
@@ -270,15 +267,6 @@ function App() {
             onImportSuccess={handleImportSuccess}
           />
         );
-      case "prompts":
-        return (
-          <PromptPanel
-            ref={promptPanelRef}
-            open={true}
-            onOpenChange={() => setCurrentView("providers")}
-            appId={activeApp}
-          />
-        );
       case "agents":
         return <AgentsPanel onOpenChange={() => setCurrentView("providers")} />;
       default:
@@ -372,8 +360,6 @@ function App() {
                 </Button>
                 <h1 className="text-lg font-semibold">
                   {currentView === "settings" && t("settings.title")}
-                  {currentView === "prompts" &&
-                    t("prompts.title", { appName: t(`apps.${activeApp}`) })}
                   {currentView === "agents" && t("agents.title")}
                 </h1>
               </div>
@@ -397,16 +383,6 @@ function App() {
             className="flex items-center gap-2"
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
-            {currentView === "prompts" && (
-              <Button
-                size="icon"
-                onClick={() => promptPanelRef.current?.openAdd()}
-                className={addActionButtonClass}
-                title={t("prompts.add")}
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
-            )}
             {currentView === "providers" && (
               <>
                 <AppSwitcher activeApp={activeApp} onSwitch={setActiveApp} />
@@ -424,15 +400,6 @@ function App() {
                       <Bot className="h-4 w-4" />
                     </Button>
                   )} */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentView("prompts")}
-                    className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                    title={t("prompts.manage")}
-                  >
-                    <Book className="h-4 w-4" />
-                  </Button>
                 </div>
 
                 <Button
