@@ -334,6 +334,14 @@ pub fn run() {
 
             let app_state = AppState::new(db);
 
+            // Disable webview context menu to prevent unwanted options
+            #[cfg(desktop)]
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.on_menu_event(|_, _| {
+                    // Do nothing - this prevents the default context menu
+                });
+            }
+
             // ============================================================
             // 按表独立判断的导入逻辑（各类数据独立检查，互不影响）
             // ============================================================
@@ -527,7 +535,7 @@ pub fn run() {
                             }
                         }
                         _ => {
-                            // Other events (including right click) will use default behavior
+                            // Other events will use default behavior
                         }
                     }
                 })
