@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { invoke } from "@tauri-apps/api/core";
@@ -6,8 +6,6 @@ import {
   Plus,
   Settings,
   ArrowLeft,
-  Server,
-  RefreshCw,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -21,7 +19,6 @@ import {
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
 import { useProviderActions } from "@/hooks/useProviderActions";
 import { extractErrorMessage } from "@/utils/errorUtils";
-import { cn } from "@/lib/utils";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
@@ -54,7 +51,6 @@ function App() {
   const { data, isLoading, refetch } = useProvidersQuery(activeApp);
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
-  const isClaudeApp = activeApp === "claude";
 
   // 🎯 使用 useProviderActions Hook 统一管理所有 Provider 操作
   const {
