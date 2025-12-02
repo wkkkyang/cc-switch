@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { Download, ExternalLink, Info, Loader2, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getVersion } from "@tauri-apps/api/app";
 import { settingsApi } from "@/lib/api";
-import { useUpdate } from "@/contexts/UpdateContext";
-import { relaunchApp } from "@/lib/updater";
 
 interface AboutSectionProps {
   isPortable: boolean;
@@ -16,16 +14,6 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
   const { t } = useTranslation();
   const [version, setVersion] = useState<string | null>(null);
   const [isLoadingVersion, setIsLoadingVersion] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const {
-    hasUpdate,
-    updateInfo,
-    updateHandle,
-    checkUpdate,
-    resetDismiss,
-    isChecking,
-  } = useUpdate();
 
   useEffect(() => {
     let active = true;
@@ -53,9 +41,9 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
     };
   }, []);
 
-  const handleOpenReleaseNotes = useCallback(async () => {
+  const handleOpenReleaseNotes = async () => {
     try {
-      const targetVersion = updateInfo?.availableVersion ?? version ?? "";
+      const targetVersion = version ?? "";
       const displayVersion = targetVersion.startsWith("v")
         ? targetVersion
         : targetVersion
@@ -76,51 +64,7 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
       console.error("[AboutSection] Failed to open release notes", error);
       toast.error(t("settings.openReleaseNotesFailed"));
     }
-  }, [t, updateInfo?.availableVersion, version]);
-
-  const handleCheckUpdate = useCallback(async () => {
-    if (hasUpdate && updateHandle) {
-      if (isPortable) {
-        try {
-          await settingsApi.checkUpdates();
-        } catch (error) {
-          console.error("[AboutSection] Portable update failed", error);
-        }
-        return;
-      }
-
-      setIsDownloading(true);
-      try {
-        resetDismiss();
-        await updateHandle.downloadAndInstall();
-        await relaunchApp();
-      } catch (error) {
-        console.error("[AboutSection] Update failed", error);
-        toast.error(t("settings.updateFailed"));
-        try {
-          await settingsApi.checkUpdates();
-        } catch (fallbackError) {
-          console.error(
-            "[AboutSection] Failed to open fallback updater",
-            fallbackError,
-          );
-        }
-      } finally {
-        setIsDownloading(false);
-      }
-      return;
-    }
-
-    try {
-      const available = await checkUpdate();
-      if (!available) {
-        toast.success(t("settings.upToDate"));
-      }
-    } catch (error) {
-      console.error("[AboutSection] Check update failed", error);
-      toast.error(t("settings.checkUpdateFailed"));
-    }
-  }, [checkUpdate, hasUpdate, isPortable, resetDismiss, t, updateHandle]);
+  };
 
   const displayVersion = version ?? t("common.unknown");
 
@@ -163,49 +107,8 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
               <ExternalLink className="mr-2 h-4 w-4" />
               {t("settings.releaseNotes")}
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleCheckUpdate}
-              disabled={isChecking || isDownloading}
-              className="min-w-[140px]"
-            >
-              {isDownloading ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("settings.updating")}
-                </span>
-              ) : hasUpdate ? (
-                <span className="inline-flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  {t("settings.updateTo", {
-                    version: updateInfo?.availableVersion ?? "",
-                  })}
-                </span>
-              ) : isChecking ? (
-                <span className="inline-flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  {t("settings.checking")}
-                </span>
-              ) : (
-                t("settings.checkForUpdates")
-              )}
-            </Button>
           </div>
         </div>
-
-        {hasUpdate && updateInfo ? (
-          <div className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            <p>
-              {t("settings.updateAvailable", {
-                version: updateInfo.availableVersion,
-              })}
-            </p>
-            {updateInfo.notes ? (
-              <p className="mt-1 line-clamp-3">{updateInfo.notes}</p>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </section>
   );

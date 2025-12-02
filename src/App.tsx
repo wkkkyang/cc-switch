@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   // Bot, // TODO: Agents 功能开发中，暂时不需要
   Book,
-  Wrench,
   Server,
   RefreshCw,
 } from "lucide-react";
@@ -31,17 +30,14 @@ import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsPage } from "@/components/settings/SettingsPage";
-import { UpdateBadge } from "@/components/UpdateBadge";
 import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
 import UsageScriptModal from "@/components/UsageScriptModal";
-import UnifiedMcpPanel from "@/components/mcp/UnifiedMcpPanel";
 import PromptPanel from "@/components/prompts/PromptPanel";
-import { SkillsPage } from "@/components/skills/SkillsPage";
 import { DeepLinkImportDialog } from "@/components/DeepLinkImportDialog";
 import { AgentsPanel } from "@/components/agents/AgentsPanel";
 import { Button } from "@/components/ui/button";
 
-type View = "providers" | "settings" | "prompts" | "skills" | "mcp" | "agents";
+type View = "providers" | "settings" | "prompts" | "agents";
 
 function App() {
   const { t } = useTranslation();
@@ -57,8 +53,6 @@ function App() {
   const [showEnvBanner, setShowEnvBanner] = useState(false);
 
   const promptPanelRef = useRef<any>(null);
-  const mcpPanelRef = useRef<any>(null);
-  const skillsPageRef = useRef<any>(null);
   const addActionButtonClass =
     "bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40 rounded-full w-8 h-8";
 
@@ -285,20 +279,6 @@ function App() {
             appId={activeApp}
           />
         );
-      case "skills":
-        return (
-          <SkillsPage
-            ref={skillsPageRef}
-            onClose={() => setCurrentView("providers")}
-          />
-        );
-      case "mcp":
-        return (
-          <UnifiedMcpPanel
-            ref={mcpPanelRef}
-            onOpenChange={() => setCurrentView("providers")}
-          />
-        );
       case "agents":
         return <AgentsPanel onOpenChange={() => setCurrentView("providers")} />;
       default:
@@ -394,34 +374,22 @@ function App() {
                   {currentView === "settings" && t("settings.title")}
                   {currentView === "prompts" &&
                     t("prompts.title", { appName: t(`apps.${activeApp}`) })}
-                  {currentView === "skills" && t("skills.title")}
-                  {currentView === "mcp" && t("mcp.unifiedPanel.title")}
                   {currentView === "agents" && t("agents.title")}
                 </h1>
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="https://github.com/farion1231/cc-switch"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xl font-semibold text-blue-500 transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    CC Switch
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView("settings")}
-                    title={t("common.settings")}
-                    className="hover:bg-black/5 dark:hover:bg-white/5"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </div>
-                <UpdateBadge onClick={() => setCurrentView("settings")} />
-              </>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold">CC Switch</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentView("settings")}
+                  title={t("common.settings")}
+                  className="hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
 
@@ -439,58 +407,11 @@ function App() {
                 <Plus className="h-5 w-5" />
               </Button>
             )}
-            {currentView === "mcp" && (
-              <Button
-                size="icon"
-                onClick={() => mcpPanelRef.current?.openAdd()}
-                className={addActionButtonClass}
-                title={t("mcp.unifiedPanel.addServer")}
-              >
-                <Plus className="h-5 w-5" />
-              </Button>
-            )}
-            {currentView === "skills" && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => skillsPageRef.current?.refresh()}
-                  className="hover:bg-black/5 dark:hover:bg-white/5"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t("skills.refresh")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => skillsPageRef.current?.openRepoManager()}
-                  className="hover:bg-black/5 dark:hover:bg-white/5"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  {t("skills.repoManager")}
-                </Button>
-              </>
-            )}
             {currentView === "providers" && (
               <>
                 <AppSwitcher activeApp={activeApp} onSwitch={setActiveApp} />
 
                 <div className="glass p-1 rounded-xl flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentView("skills")}
-                    className={cn(
-                      "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
-                      "transition-all duration-200 ease-in-out overflow-hidden",
-                      isClaudeApp
-                        ? "opacity-100 w-8 scale-100 px-2"
-                        : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
-                    )}
-                    title={t("skills.manage")}
-                  >
-                    <Wrench className="h-4 w-4 flex-shrink-0" />
-                  </Button>
                   {/* TODO: Agents 功能开发中，暂时隐藏入口 */}
                   {/* {isClaudeApp && (
                     <Button
@@ -511,15 +432,6 @@ function App() {
                     title={t("prompts.manage")}
                   >
                     <Book className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentView("mcp")}
-                    className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                    title={t("mcp.title")}
-                  >
-                    <Server className="h-4 w-4" />
                   </Button>
                 </div>
 
