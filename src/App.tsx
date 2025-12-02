@@ -6,7 +6,6 @@ import {
   Plus,
   Settings,
   ArrowLeft,
-  // Bot, // TODO: Agents 功能开发中，暂时不需要
   Server,
   RefreshCw,
 } from "lucide-react";
@@ -32,10 +31,9 @@ import { SettingsPage } from "@/components/settings/SettingsPage";
 import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
 import UsageScriptModal from "@/components/UsageScriptModal";
 import { DeepLinkImportDialog } from "@/components/DeepLinkImportDialog";
-import { AgentsPanel } from "@/components/agents/AgentsPanel";
 import { Button } from "@/components/ui/button";
 
-type View = "providers" | "settings" | "agents";
+type View = "providers" | "settings";
 
 function App() {
   const { t } = useTranslation();
@@ -267,8 +265,6 @@ function App() {
             onImportSuccess={handleImportSuccess}
           />
         );
-      case "agents":
-        return <AgentsPanel onOpenChange={() => setCurrentView("providers")} />;
       default:
         return (
           <div className="mx-auto max-w-[56rem] px-5 flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
@@ -360,7 +356,6 @@ function App() {
                 </Button>
                 <h1 className="text-lg font-semibold">
                   {currentView === "settings" && t("settings.title")}
-                  {currentView === "agents" && t("agents.title")}
                 </h1>
               </div>
             ) : (
@@ -388,18 +383,6 @@ function App() {
                 <AppSwitcher activeApp={activeApp} onSwitch={setActiveApp} />
 
                 <div className="glass p-1 rounded-xl flex items-center gap-1">
-                  {/* TODO: Agents 功能开发中，暂时隐藏入口 */}
-                  {/* {isClaudeApp && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentView("agents")}
-                      className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                      title="Agents"
-                    >
-                      <Bot className="h-4 w-4" />
-                    </Button>
-                  )} */}
                 </div>
 
                 <Button
