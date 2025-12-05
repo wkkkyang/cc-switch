@@ -48,6 +48,15 @@ pub async fn get_config_status(app: String) -> Result<ConfigStatus, String> {
 
             Ok(ConfigStatus { exists, path })
         }
+        AppType::Grok => {
+            let settings_path = crate::grok_config::get_grok_settings_path();
+            let exists = settings_path.exists();
+            let path = crate::grok_config::get_grok_dir()
+                .to_string_lossy()
+                .to_string();
+
+            Ok(ConfigStatus { exists, path })
+        }
     }
 }
 
@@ -64,6 +73,7 @@ pub async fn get_config_dir(app: String) -> Result<String, String> {
         AppType::Claude => config::get_claude_config_dir(),
         AppType::Codex => codex_config::get_codex_config_dir(),
         AppType::Gemini => crate::gemini_config::get_gemini_dir(),
+        AppType::Grok => crate::grok_config::get_grok_dir(),
         AppType::Qwen => crate::qwen_config::get_qwen_dir(),
     };
 
@@ -77,6 +87,7 @@ pub async fn open_config_folder(handle: AppHandle, app: String) -> Result<bool, 
         AppType::Claude => config::get_claude_config_dir(),
         AppType::Codex => codex_config::get_codex_config_dir(),
         AppType::Gemini => crate::gemini_config::get_gemini_dir(),
+        AppType::Grok => crate::grok_config::get_grok_dir(),
         AppType::Qwen => crate::qwen_config::get_qwen_dir(),
     };
 
@@ -206,7 +217,7 @@ pub async fn set_common_config_snippet(
     // 验证格式（根据应用类型）
     if !snippet.trim().is_empty() {
         match app_type.as_str() {
-            "claude" | "gemini" | "qwen" => {
+            "claude" | "gemini" | "qwen" | "grok" => {
                 // 验证 JSON 格式
                 serde_json::from_str::<serde_json::Value>(&snippet)
                     .map_err(|e| format!("无效的 JSON 格式: {e}"))?;

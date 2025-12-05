@@ -109,6 +109,8 @@ export function useSettings(): UseSettingsResult {
       sanitizeDir(data?.claudeConfigDir),
       sanitizeDir(data?.codexConfigDir),
       sanitizeDir(data?.geminiConfigDir),
+      sanitizeDir(data?.qwenConfigDir),
+      sanitizeDir(data?.grokConfigDir),
     );
     setRequiresRestart(false);
   }, [
@@ -131,12 +133,16 @@ export function useSettings(): UseSettingsResult {
         const sanitizedClaudeDir = sanitizeDir(mergedSettings.claudeConfigDir);
         const sanitizedCodexDir = sanitizeDir(mergedSettings.codexConfigDir);
         const sanitizedGeminiDir = sanitizeDir(mergedSettings.geminiConfigDir);
+        const sanitizedQwenDir = sanitizeDir(mergedSettings.qwenConfigDir);
+        const sanitizedGrokDir = sanitizeDir(mergedSettings.grokConfigDir);
 
         const payload: Settings = {
           ...mergedSettings,
           claudeConfigDir: sanitizedClaudeDir,
           codexConfigDir: sanitizedCodexDir,
           geminiConfigDir: sanitizedGeminiDir,
+          qwenConfigDir: sanitizedQwenDir,
+          grokConfigDir: sanitizedGrokDir,
           language: mergedSettings.language,
         };
 
@@ -208,16 +214,22 @@ export function useSettings(): UseSettingsResult {
         const sanitizedClaudeDir = sanitizeDir(mergedSettings.claudeConfigDir);
         const sanitizedCodexDir = sanitizeDir(mergedSettings.codexConfigDir);
         const sanitizedGeminiDir = sanitizeDir(mergedSettings.geminiConfigDir);
+        const sanitizedQwenDir = sanitizeDir(mergedSettings.qwenConfigDir);
+        const sanitizedGrokDir = sanitizeDir(mergedSettings.grokConfigDir);
         const previousAppDir = initialAppConfigDir;
         const previousClaudeDir = sanitizeDir(data?.claudeConfigDir);
         const previousCodexDir = sanitizeDir(data?.codexConfigDir);
         const previousGeminiDir = sanitizeDir(data?.geminiConfigDir);
+        const previousQwenDir = sanitizeDir(data?.qwenConfigDir);
+        const previousGrokDir = sanitizeDir(data?.grokConfigDir);
 
         const payload: Settings = {
           ...mergedSettings,
           claudeConfigDir: sanitizedClaudeDir,
           codexConfigDir: sanitizedCodexDir,
           geminiConfigDir: sanitizedGeminiDir,
+          qwenConfigDir: sanitizedQwenDir,
+          grokConfigDir: sanitizedGrokDir,
           language: mergedSettings.language,
         };
 
@@ -291,7 +303,15 @@ export function useSettings(): UseSettingsResult {
         const claudeDirChanged = sanitizedClaudeDir !== previousClaudeDir;
         const codexDirChanged = sanitizedCodexDir !== previousCodexDir;
         const geminiDirChanged = sanitizedGeminiDir !== previousGeminiDir;
-        if (claudeDirChanged || codexDirChanged || geminiDirChanged) {
+        const qwenDirChanged = sanitizedQwenDir !== previousQwenDir;
+        const grokDirChanged = sanitizedGrokDir !== previousGrokDir;
+        if (
+          claudeDirChanged ||
+          codexDirChanged ||
+          geminiDirChanged ||
+          qwenDirChanged ||
+          grokDirChanged
+        ) {
           const syncResult = await syncCurrentProvidersLiveSafe();
           if (!syncResult.ok) {
             console.warn(

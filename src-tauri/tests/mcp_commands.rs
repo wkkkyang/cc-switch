@@ -214,6 +214,7 @@ fn set_mcp_enabled_for_codex_writes_live_config() {
                 claude: false,
                 codex: false, // 初始未启用
                 gemini: false,
+                grok: false,
                 qwen: false,
             },
             description: None,

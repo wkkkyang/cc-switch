@@ -11,6 +11,7 @@ mod deeplink;
 mod error;
 mod gemini_config;
 mod gemini_mcp;
+mod grok_config;
 mod init_status;
 mod mcp;
 mod prompt;
@@ -29,15 +30,16 @@ pub use app_config::{AppType, McpApps, McpServer, MultiAppConfig};
 pub use codex_config::{get_codex_auth_path, get_codex_config_path, write_codex_live_atomic};
 pub use commands::*;
 pub use config::{get_claude_mcp_path, get_claude_settings_path, read_json_file};
+pub use grok_config::{get_grok_dir, get_grok_settings_path, read_grok_settings, write_grok_settings};
 pub use qwen_config::{get_qwen_dir, get_qwen_settings_path, read_qwen_settings, write_qwen_settings};
 pub use database::Database;
 pub use deeplink::{import_provider_from_deeplink, parse_deeplink_url, DeepLinkImportRequest};
 pub use error::AppError;
 pub use mcp::{
-    import_from_claude, import_from_codex, import_from_gemini, remove_server_from_claude,
-    remove_server_from_codex, remove_server_from_gemini, sync_enabled_to_claude,
-    sync_enabled_to_codex, sync_enabled_to_gemini, sync_single_server_to_claude,
-    sync_single_server_to_codex, sync_single_server_to_gemini,
+    import_from_claude, import_from_codex, import_from_gemini, import_from_grok, remove_server_from_claude,
+    remove_server_from_codex, remove_server_from_gemini, remove_server_from_grok, sync_enabled_to_claude,
+    sync_enabled_to_codex, sync_enabled_to_gemini, sync_enabled_to_grok, sync_single_server_to_claude,
+    sync_single_server_to_codex, sync_single_server_to_gemini, sync_single_server_to_grok,
 };
 pub use provider::{Provider, ProviderMeta};
 pub use services::{
@@ -361,6 +363,7 @@ pub fn run() {
                 crate::app_config::AppType::Claude,
                 crate::app_config::AppType::Codex,
                 crate::app_config::AppType::Gemini,
+                crate::app_config::AppType::Grok,
             ] {
                 match crate::services::provider::ProviderService::import_default_config(
                     &app_state,
@@ -407,6 +410,14 @@ pub fn run() {
                     Ok(_) => log::debug!("○ No Gemini MCP servers found to import"),
                     Err(e) => log::warn!("✗ Failed to import Gemini MCP: {e}"),
                 }
+
+                match crate::services::mcp::McpService::import_from_grok(&app_state) {
+                    Ok(count) if count > 0 => {
+                        log::info!("✓ Imported {count} MCP server(s) from Grok");
+                    }
+                    Ok(_) => log::debug!("○ No Grok MCP servers found to import"),
+                    Err(e) => log::warn!("✗ Failed to import Grok MCP: {e}"),
+                }
             }
 
             // 4. 导入提示词文件（表空时触发）
@@ -417,6 +428,7 @@ pub fn run() {
                     crate::app_config::AppType::Claude,
                     crate::app_config::AppType::Codex,
                     crate::app_config::AppType::Gemini,
+                    crate::app_config::AppType::Grok,
                 ] {
                     match crate::services::prompt::PromptService::import_from_file_on_first_launch(
                         &app_state,
@@ -565,6 +577,10 @@ pub fn run() {
             commands::get_common_config_snippet,
             commands::set_common_config_snippet,
             commands::read_live_provider_settings,
+            commands::read_grok_settings_command,
+            commands::write_grok_settings_command,
+            commands::read_live_grok_settings,
+            commands::sync_current_grok_provider_live,
             commands::get_settings,
             commands::save_settings,
             commands::restart_app,

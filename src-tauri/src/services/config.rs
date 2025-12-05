@@ -88,6 +88,8 @@ impl ConfigService {
         Self::sync_current_provider_for_app(config, &AppType::Claude)?;
         Self::sync_current_provider_for_app(config, &AppType::Codex)?;
         Self::sync_current_provider_for_app(config, &AppType::Gemini)?;
+        Self::sync_current_provider_for_app(config, &AppType::Grok)?;
+        Self::sync_current_provider_for_app(config, &AppType::Qwen)?;
         Ok(())
     }
 
@@ -122,6 +124,7 @@ impl ConfigService {
             AppType::Codex => Self::sync_codex_live(config, &current_id, &provider)?,
             AppType::Claude => Self::sync_claude_live(config, &current_id, &provider)?,
             AppType::Gemini => Self::sync_gemini_live(config, &current_id, &provider)?,
+            AppType::Grok => Self::sync_grok_live(config, &current_id, &provider)?,
             AppType::Qwen => {
                 // Qwen 同步逻辑（暂时为空实现）
                 // TODO: 实现 Qwen 配置同步逻辑
@@ -216,6 +219,29 @@ impl ConfigService {
         if let Some(manager) = config.get_manager_mut(&AppType::Gemini) {
             if let Some(target) = manager.providers.get_mut(provider_id) {
                 target.settings_config = live_after;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn sync_grok_live(
+        config: &mut MultiAppConfig,
+        provider_id: &str,
+        provider: &Provider,
+    ) -> Result<(), AppError> {
+        use crate::grok_config::{read_grok_settings, write_grok_settings, GrokSettings};
+
+        let settings = GrokSettings::from_json_value(&provider.settings_config)?;
+        write_grok_settings(&settings)?;
+        
+        // 同步 MCP 配置
+        crate::mcp::sync_enabled_to_grok(config)?;
+
+        let live_after = read_grok_settings()?;
+        if let Some(manager) = config.get_manager_mut(&AppType::Grok) {
+            if let Some(target) = manager.providers.get_mut(provider_id) {
+                target.settings_config = live_after.to_json_value()?;
             }
         }
 

@@ -14,6 +14,8 @@ pub struct McpApps {
     #[serde(default)]
     pub gemini: bool,
     #[serde(default)]
+    pub grok: bool,
+    #[serde(default)]
     pub qwen: bool,
 }
 
@@ -24,6 +26,7 @@ impl McpApps {
             AppType::Claude => self.claude,
             AppType::Codex => self.codex,
             AppType::Gemini => self.gemini,
+            AppType::Grok => self.grok,
             AppType::Qwen => self.qwen,
         }
     }
@@ -34,6 +37,7 @@ impl McpApps {
             AppType::Claude => self.claude = enabled,
             AppType::Codex => self.codex = enabled,
             AppType::Gemini => self.gemini = enabled,
+            AppType::Grok => self.grok = enabled,
             AppType::Qwen => self.qwen = enabled,
         }
     }
@@ -50,6 +54,9 @@ impl McpApps {
         if self.gemini {
             apps.push(AppType::Gemini);
         }
+        if self.grok {
+            apps.push(AppType::Grok);
+        }
         if self.qwen {
             apps.push(AppType::Qwen);
         }
@@ -58,7 +65,7 @@ impl McpApps {
 
     /// 检查是否所有应用都未启用
     pub fn is_empty(&self) -> bool {
-        !self.claude && !self.codex && !self.gemini && !self.qwen
+        !self.claude && !self.codex && !self.gemini && !self.grok && !self.qwen
     }
 }
 
@@ -109,6 +116,8 @@ pub struct McpRoot {
     #[serde(default, skip_serializing_if = "McpConfig::is_empty")]
     pub gemini: McpConfig,
     #[serde(default, skip_serializing_if = "McpConfig::is_empty")]
+    pub grok: McpConfig,
+    #[serde(default, skip_serializing_if = "McpConfig::is_empty")]
     pub qwen: McpConfig,
 }
 
@@ -121,6 +130,7 @@ impl Default for McpRoot {
             claude: McpConfig::default(),
             codex: McpConfig::default(),
             gemini: McpConfig::default(),
+            grok: McpConfig::default(),
             qwen: McpConfig::default(),
         }
     }
@@ -143,6 +153,8 @@ pub struct PromptRoot {
     #[serde(default)]
     pub gemini: PromptConfig,
     #[serde(default)]
+    pub grok: PromptConfig,
+    #[serde(default)]
     pub qwen: PromptConfig,
 }
 
@@ -157,8 +169,9 @@ use crate::provider::ProviderManager;
 pub enum AppType {
     Claude,
     Codex,
-    Gemini, // 新增
-    Qwen,   // 新增
+    Gemini,
+    Grok,
+    Qwen,
 }
 
 impl AppType {
@@ -167,6 +180,7 @@ impl AppType {
             AppType::Claude => "claude",
             AppType::Codex => "codex",
             AppType::Gemini => "gemini",
+            AppType::Grok => "grok",
             AppType::Qwen => "qwen",
         }
     }
@@ -181,11 +195,12 @@ impl FromStr for AppType {
             "claude" => Ok(AppType::Claude),
             "codex" => Ok(AppType::Codex),
             "gemini" => Ok(AppType::Gemini),
+            "grok" => Ok(AppType::Grok),
             "qwen" => Ok(AppType::Qwen),
             other => Err(AppError::localized(
                 "unsupported_app",
-                format!("不支持的应用标识: '{other}'。可选值: claude, codex, gemini, qwen。"),
-                format!("Unsupported app id: '{other}'. Allowed: claude, codex, gemini, qwen."),
+                format!("不支持的应用标识: '{other}'。可选值: claude, codex, gemini, grok, qwen。"),
+                format!("Unsupported app id: '{other}'. Allowed: claude, codex, gemini, grok, qwen."),
             )),
         }
     }
@@ -204,6 +219,9 @@ pub struct CommonConfigSnippets {
     pub gemini: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub grok: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub qwen: Option<String>,
 }
 
@@ -214,6 +232,7 @@ impl CommonConfigSnippets {
             AppType::Claude => self.claude.as_ref(),
             AppType::Codex => self.codex.as_ref(),
             AppType::Gemini => self.gemini.as_ref(),
+            AppType::Grok => self.grok.as_ref(),
             AppType::Qwen => self.qwen.as_ref(),
         }
     }
@@ -224,6 +243,7 @@ impl CommonConfigSnippets {
             AppType::Claude => self.claude = snippet,
             AppType::Codex => self.codex = snippet,
             AppType::Gemini => self.gemini = snippet,
+            AppType::Grok => self.grok = snippet,
             AppType::Qwen => self.qwen = snippet,
         }
     }
@@ -431,6 +451,7 @@ impl MultiAppConfig {
             AppType::Claude => &self.mcp.claude,
             AppType::Codex => &self.mcp.codex,
             AppType::Gemini => &self.mcp.gemini,
+            AppType::Grok => &self.mcp.grok,
             AppType::Qwen => &self.mcp.qwen,
         }
     }
@@ -441,6 +462,7 @@ impl MultiAppConfig {
             AppType::Claude => &mut self.mcp.claude,
             AppType::Codex => &mut self.mcp.codex,
             AppType::Gemini => &mut self.mcp.gemini,
+            AppType::Grok => &mut self.mcp.grok,
             AppType::Qwen => &mut self.mcp.qwen,
         }
     }
@@ -455,6 +477,7 @@ impl MultiAppConfig {
         Self::auto_import_prompt_if_exists(&mut config, AppType::Claude)?;
         Self::auto_import_prompt_if_exists(&mut config, AppType::Codex)?;
         Self::auto_import_prompt_if_exists(&mut config, AppType::Gemini)?;
+        Self::auto_import_prompt_if_exists(&mut config, AppType::Grok)?;
         Self::auto_import_prompt_if_exists(&mut config, AppType::Qwen)?;
 
         Ok(config)
@@ -475,6 +498,7 @@ impl MultiAppConfig {
         if !self.prompts.claude.prompts.is_empty()
             || !self.prompts.codex.prompts.is_empty()
             || !self.prompts.gemini.prompts.is_empty()
+            || !self.prompts.grok.prompts.is_empty()
             || !self.prompts.qwen.prompts.is_empty()
         {
             return Ok(false);
@@ -483,7 +507,7 @@ impl MultiAppConfig {
         log::info!("检测到已存在配置文件且 Prompt 列表为空，将尝试从现有提示词文件自动导入");
 
         let mut imported = false;
-        for app in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Qwen] {
+        for app in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Grok, AppType::Qwen] {
             // 复用已有的单应用导入逻辑
             if Self::auto_import_prompt_if_exists(self, app)? {
                 imported = true;
@@ -552,6 +576,7 @@ impl MultiAppConfig {
             AppType::Claude => &mut config.prompts.claude.prompts,
             AppType::Codex => &mut config.prompts.codex.prompts,
             AppType::Gemini => &mut config.prompts.gemini.prompts,
+            AppType::Grok => &mut config.prompts.grok.prompts,
             AppType::Qwen => &mut config.prompts.qwen.prompts,
         };
 
@@ -581,11 +606,12 @@ impl MultiAppConfig {
         let mut conflicts = Vec::new();
 
         // 收集所有应用的 MCP
-        for app in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Qwen] {
+        for app in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Grok, AppType::Qwen] {
             let old_servers = match app {
                 AppType::Claude => &self.mcp.claude.servers,
                 AppType::Codex => &self.mcp.codex.servers,
                 AppType::Gemini => &self.mcp.gemini.servers,
+                AppType::Grok => &self.mcp.grok.servers,
                 AppType::Qwen => &self.mcp.qwen.servers,
             };
 
@@ -689,6 +715,7 @@ impl MultiAppConfig {
         self.mcp.claude = McpConfig::default();
         self.mcp.codex = McpConfig::default();
         self.mcp.gemini = McpConfig::default();
+        self.mcp.grok = McpConfig::default();
         self.mcp.qwen = McpConfig::default();
 
         Ok(true)

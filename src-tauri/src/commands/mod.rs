@@ -3,6 +3,7 @@
 mod config;
 mod deeplink;
 mod env;
+mod grok;
 mod import_export;
 mod mcp;
 mod misc;
@@ -16,6 +17,7 @@ pub mod skill;
 pub use config::*;
 pub use deeplink::*;
 pub use env::*;
+pub use grok::*;
 pub use import_export::*;
 pub use mcp::*;
 pub use misc::*;

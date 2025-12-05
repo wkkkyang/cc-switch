@@ -386,6 +386,10 @@ impl ProviderService {
                 use crate::gemini_config::validate_gemini_settings;
                 validate_gemini_settings(&provider.settings_config)?
             }
+            AppType::Grok => {
+                use crate::grok_config::GrokSettings;
+                GrokSettings::from_json_value(&provider.settings_config)?;
+            }
             AppType::Qwen => {
                 // Qwen 配置验证逻辑（暂时为空实现）
                 // TODO: 实现 Qwen 配置验证逻辑
@@ -525,6 +529,19 @@ impl ProviderService {
                     .cloned()
                     .unwrap_or_else(|| "https://generativelanguage.googleapis.com".to_string());
 
+                Ok((api_key, base_url))
+            }
+            AppType::Grok => {
+                use crate::grok_config::GrokSettings;
+                let settings = GrokSettings::from_json_value(&provider.settings_config)?;
+                let api_key = settings.api_key.ok_or_else(|| {
+                    AppError::localized(
+                        "grok.missing_api_key",
+                        "缺少 API Key",
+                        "Missing API Key",
+                    )
+                })?;
+                let base_url = settings.base_url.unwrap_or_default();
                 Ok((api_key, base_url))
             }
             AppType::Qwen => {

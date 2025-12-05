@@ -16,12 +16,14 @@ export function AppSwitcher({ activeApp, onSwitch }: AppSwitcherProps) {
     claude: "claude",
     codex: "openai",
     gemini: "gemini",
+    grok: "grok",
     qwen: "qwen",
   };
   const appDisplayName: Record<AppId, string> = {
     claude: "Claude",
     codex: "Codex",
     gemini: "Gemini",
+    grok: "Grok",
     qwen: "Qwen",
   };
 
@@ -91,6 +93,28 @@ export function AppSwitcher({ activeApp, onSwitch }: AppSwitcherProps) {
           }
         />
         <span>{appDisplayName.gemini}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleSwitch("grok")}
+        className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+          activeApp === "grok"
+            ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-gray-100"
+            : "text-gray-500 hover:text-gray-900 hover:bg-white/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/60"
+        }`}
+      >
+        <ProviderIcon
+          icon={appIconName.grok}
+          name={appDisplayName.grok}
+          size={iconSize}
+          className={
+            activeApp === "grok"
+              ? "text-foreground"
+              : "text-gray-500 dark:text-gray-400 group-hover:text-foreground transition-colors"
+          }
+        />
+        <span>{appDisplayName.grok}</span>
       </button>
 
       <button

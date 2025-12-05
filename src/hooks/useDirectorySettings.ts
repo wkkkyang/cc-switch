@@ -5,13 +5,14 @@ import { homeDir, join } from "@tauri-apps/api/path";
 import { settingsApi, type AppId } from "@/lib/api";
 import type { SettingsFormState } from "./useSettingsForm";
 
-type DirectoryKey = "appConfig" | "claude" | "codex" | "gemini" | "qwen";
+type DirectoryKey = "appConfig" | "claude" | "codex" | "gemini" | "grok" | "qwen";
 
 export interface ResolvedDirectories {
   appConfig: string;
   claude: string;
   codex: string;
   gemini: string;
+  grok: string;
   qwen: string;
 }
 
@@ -46,7 +47,9 @@ const computeDefaultConfigDir = async (
           ? ".codex"
           : app === "gemini"
             ? ".gemini"
-            : ".qwen";
+            : app === "grok"
+              ? ".grok"
+              : ".qwen";
     return await join(home, folder);
   } catch (error) {
     console.error(
@@ -77,6 +80,8 @@ export interface UseDirectorySettingsResult {
     claudeDir?: string,
     codexDir?: string,
     geminiDir?: string,
+    qwenDir?: string,
+    grokDir?: string,
   ) => void;
 }
 
@@ -103,6 +108,7 @@ export function useDirectorySettings({
     claude: "",
     codex: "",
     gemini: "",
+    grok: "",
     qwen: "",
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +118,7 @@ export function useDirectorySettings({
     claude: "",
     codex: "",
     gemini: "",
+    grok: "",
     qwen: "",
   });
   const initialAppConfigDirRef = useRef<string | undefined>(undefined);
@@ -128,22 +135,26 @@ export function useDirectorySettings({
           claudeDir,
           codexDir,
           geminiDir,
+          grokDir,
           qwenDir,
           defaultAppConfig,
           defaultClaudeDir,
           defaultCodexDir,
           defaultGeminiDir,
+          defaultGrokDir,
           defaultQwenDir,
         ] = await Promise.all([
           settingsApi.getAppConfigDirOverride(),
           settingsApi.getConfigDir("claude"),
           settingsApi.getConfigDir("codex"),
           settingsApi.getConfigDir("gemini"),
+          settingsApi.getConfigDir("grok"),
           settingsApi.getConfigDir("qwen"),
           computeDefaultAppConfigDir(),
           computeDefaultConfigDir("claude"),
           computeDefaultConfigDir("codex"),
           computeDefaultConfigDir("gemini"),
+          computeDefaultConfigDir("grok"),
           computeDefaultConfigDir("qwen"),
         ]);
 
@@ -156,6 +167,7 @@ export function useDirectorySettings({
           claude: defaultClaudeDir ?? "",
           codex: defaultCodexDir ?? "",
           gemini: defaultGeminiDir ?? "",
+          grok: defaultGrokDir ?? "",
           qwen: defaultQwenDir ?? "",
         };
 
@@ -167,6 +179,7 @@ export function useDirectorySettings({
           claude: claudeDir || defaultsRef.current.claude,
           codex: codexDir || defaultsRef.current.codex,
           gemini: geminiDir || defaultsRef.current.gemini,
+          grok: grokDir || defaultsRef.current.grok,
           qwen: qwenDir || defaultsRef.current.qwen,
         });
       } catch (error) {
@@ -200,7 +213,9 @@ export function useDirectorySettings({
               ? { codexConfigDir: sanitized }
               : key === "gemini"
                 ? { geminiConfigDir: sanitized }
-                : { qwenConfigDir: sanitized },
+                : key === "grok"
+                  ? { grokConfigDir: sanitized }
+                  : { qwenConfigDir: sanitized },
         );
       }
 
@@ -228,7 +243,9 @@ export function useDirectorySettings({
             ? "codex"
             : app === "gemini"
               ? "gemini"
-              : "qwen",
+              : app === "grok"
+                ? "grok"
+                : "qwen",
         value,
       );
     },
@@ -244,7 +261,9 @@ export function useDirectorySettings({
             ? "codex"
             : app === "gemini"
               ? "gemini"
-              : "qwen";
+              : app === "grok"
+                ? "grok"
+                : "qwen";
       const currentValue =
         key === "claude"
           ? (settings?.claudeConfigDir ?? resolvedDirs.claude)
@@ -252,7 +271,9 @@ export function useDirectorySettings({
             ? (settings?.codexConfigDir ?? resolvedDirs.codex)
             : key === "gemini"
               ? (settings?.geminiConfigDir ?? resolvedDirs.gemini)
-              : (settings?.qwenConfigDir ?? resolvedDirs.qwen);
+              : key === "grok"
+                ? (settings?.grokConfigDir ?? resolvedDirs.grok)
+                : (settings?.qwenConfigDir ?? resolvedDirs.qwen);
 
       try {
         const picked = await settingsApi.selectConfigDirectory(currentValue);
@@ -300,7 +321,9 @@ export function useDirectorySettings({
             ? "codex"
             : app === "gemini"
               ? "gemini"
-              : "qwen";
+              : app === "grok"
+                ? "grok"
+                : "qwen";
       if (!defaultsRef.current[key]) {
         const fallback = await computeDefaultConfigDir(app);
         if (fallback) {
@@ -334,6 +357,7 @@ export function useDirectorySettings({
       codexDir?: string,
       geminiDir?: string,
       qwenDir?: string,
+      grokDir?: string,
     ) => {
       setAppConfigDir(initialAppConfigDirRef.current);
       setResolvedDirs({
@@ -343,6 +367,7 @@ export function useDirectorySettings({
         codex: codexDir ?? defaultsRef.current.codex,
         gemini: geminiDir ?? defaultsRef.current.gemini,
         qwen: qwenDir ?? defaultsRef.current.qwen,
+        grok: grokDir ?? defaultsRef.current.grok,
       });
     },
     [],

@@ -15,6 +15,7 @@ interface DirectorySettingsProps {
   claudeDir?: string;
   codexDir?: string;
   geminiDir?: string;
+  grokDir?: string;
   qwenDir?: string;
   onDirectoryChange: (app: AppId, value?: string) => void;
   onBrowseDirectory: (app: AppId) => Promise<void>;
@@ -30,6 +31,7 @@ export function DirectorySettings({
   claudeDir,
   codexDir,
   geminiDir,
+  grokDir,
   qwenDir,
   onDirectoryChange,
   onBrowseDirectory,
@@ -118,6 +120,17 @@ export function DirectorySettings({
           onChange={(val) => onDirectoryChange("gemini", val)}
           onBrowse={() => onBrowseDirectory("gemini")}
           onReset={() => onResetDirectory("gemini")}
+        />
+
+        <DirectoryInput
+          label={t("settings.grokConfigDir")}
+          description={undefined}
+          value={grokDir}
+          resolvedValue={resolvedDirs.grok}
+          placeholder={t("settings.browsePlaceholderGrok")}
+          onChange={(val) => onDirectoryChange("grok", val)}
+          onBrowse={() => onBrowseDirectory("grok")}
+          onReset={() => onResetDirectory("grok")}
         />
 
         <DirectoryInput

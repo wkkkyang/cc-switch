@@ -112,6 +112,12 @@ pub fn import_mcp_from_deeplink(
             if target_apps.gemini {
                 merged_apps.gemini = true;
             }
+            if target_apps.grok {
+                merged_apps.grok = true;
+            }
+            if target_apps.qwen {
+                merged_apps.qwen = true;
+            }
 
             McpServer {
                 id: existing.id.clone(),
@@ -166,6 +172,7 @@ pub(crate) fn parse_mcp_apps(apps_str: &str) -> Result<McpApps, AppError> {
         claude: false,
         codex: false,
         gemini: false,
+        grok: false,
         qwen: false,
     };
 
@@ -174,6 +181,7 @@ pub(crate) fn parse_mcp_apps(apps_str: &str) -> Result<McpApps, AppError> {
             "claude" => apps.claude = true,
             "codex" => apps.codex = true,
             "gemini" => apps.gemini = true,
+            "grok" => apps.grok = true,
             "qwen" => apps.qwen = true,
             other => {
                 return Err(AppError::InvalidInput(format!(

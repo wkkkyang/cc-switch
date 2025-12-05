@@ -198,6 +198,7 @@ export function SettingsPage({
                     claudeDir={settings.claudeConfigDir}
                     codexDir={settings.codexConfigDir}
                     geminiDir={settings.geminiConfigDir}
+                    grokDir={settings.grokConfigDir}
                     qwenDir={settings.qwenConfigDir}
                     onDirectoryChange={updateDirectory}
                     onBrowseDirectory={browseDirectory}

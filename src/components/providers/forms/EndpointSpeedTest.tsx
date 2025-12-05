@@ -13,6 +13,7 @@ const ENDPOINT_TIMEOUT_SECS = {
   codex: 12,
   claude: 8,
   gemini: 8, // 新增 gemini
+  grok: 8, // 新增 grok
   qwen: 8, // 新增 qwen
 } as const;
 

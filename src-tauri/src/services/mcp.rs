@@ -94,6 +94,9 @@ impl McpService {
             AppType::Gemini => {
                 mcp::sync_single_server_to_gemini(&Default::default(), &server.id, &server.server)?;
             }
+            AppType::Grok => {
+                mcp::sync_single_server_to_grok(&Default::default(), &server.id, &server.server)?;
+            }
             AppType::Qwen => {
                 // Qwen MCP 同步逻辑（暂时为空实现）
                 // TODO: 实现 Qwen MCP 同步逻辑
@@ -120,6 +123,7 @@ impl McpService {
             AppType::Claude => mcp::remove_server_from_claude(id)?,
             AppType::Codex => mcp::remove_server_from_codex(id)?,
             AppType::Gemini => mcp::remove_server_from_gemini(id)?,
+            AppType::Grok => mcp::remove_server_from_grok(id)?,
             AppType::Qwen => {
                 // Qwen MCP 移除逻辑（暂时为空实现）
                 // TODO: 实现 Qwen MCP 移除逻辑
@@ -245,6 +249,28 @@ impl McpService {
                 for server in servers.values() {
                     state.db.save_mcp_server(server)?;
                     // 同步到 Gemini live 配置
+                    Self::sync_server_to_apps(state, server)?;
+                }
+            }
+        }
+
+        Ok(count)
+    }
+
+    /// 从 Grok 导入 MCP（v3.7.0 已更新为统一结构）
+    pub fn import_from_grok(state: &AppState) -> Result<usize, AppError> {
+        // 创建临时 MultiAppConfig 用于导入
+        let mut temp_config = crate::app_config::MultiAppConfig::default();
+
+        // 调用原有的导入逻辑（从 mcp.rs）
+        let count = crate::mcp::import_from_grok(&mut temp_config)?;
+
+        // 如果有导入的服务器，保存到数据库
+        if count > 0 {
+            if let Some(servers) = &temp_config.mcp.servers {
+                for server in servers.values() {
+                    state.db.save_mcp_server(server)?;
+                    // 同步到 Grok live 配置
                     Self::sync_server_to_apps(state, server)?;
                 }
             }

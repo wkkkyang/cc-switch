@@ -21,6 +21,10 @@ import {
   type GeminiProviderPreset,
 } from "@/config/geminiProviderPresets";
 import {
+  grokProviderPresets,
+  type GrokProviderPreset,
+} from "@/config/grokProviderPresets";
+import {
   qwenProviderPresets,
   type QwenProviderPreset,
 } from "@/config/qwenProviderPresets";
@@ -35,6 +39,7 @@ import { BasicFormFields } from "./BasicFormFields";
 import { ClaudeFormFields } from "./ClaudeFormFields";
 import { CodexFormFields } from "./CodexFormFields";
 import { GeminiFormFields } from "./GeminiFormFields";
+import { GrokFormFields } from "./GrokFormFields";
 import { QwenFormFields } from "./QwenFormFields";
 import {
   useProviderCategory,
@@ -65,6 +70,17 @@ const GEMINI_DEFAULT_CONFIG = JSON.stringify(
   null,
   2,
 );
+const GROK_DEFAULT_CONFIG = JSON.stringify(
+  {
+    apiKey: "",
+    baseURL: "",
+    defaultModel: "grok-code-fast-1",
+    models: [],
+    settingsVersion: 2,
+  },
+  null,
+  2,
+);
 const QWEN_DEFAULT_CONFIG = JSON.stringify(
   {
     security: {
@@ -85,7 +101,7 @@ const QWEN_DEFAULT_CONFIG = JSON.stringify(
 
 type PresetEntry = {
   id: string;
-  preset: ProviderPreset | CodexProviderPreset | GeminiProviderPreset | QwenProviderPreset;
+  preset: ProviderPreset | CodexProviderPreset | GeminiProviderPreset | GrokProviderPreset | QwenProviderPreset;
 };
 
 interface ProviderFormProps {
@@ -171,9 +187,11 @@ export function ProviderForm({
           ? CODEX_DEFAULT_CONFIG
           : appId === "gemini"
             ? GEMINI_DEFAULT_CONFIG
-            : appId === "qwen"
-              ? QWEN_DEFAULT_CONFIG
-              : CLAUDE_DEFAULT_CONFIG,
+            : appId === "grok"
+              ? GROK_DEFAULT_CONFIG
+              : appId === "qwen"
+                ? QWEN_DEFAULT_CONFIG
+                : CLAUDE_DEFAULT_CONFIG,
       icon: initialData?.icon ?? "",
       iconColor: initialData?.iconColor ?? "",
     }),
@@ -203,6 +221,7 @@ export function ProviderForm({
   const {
     baseUrl,
     handleClaudeBaseUrlChange,
+    handleGrokBaseUrlChange,
     handleQwenBaseUrlChange,
   } = useBaseUrlState({
     appType: appId,
@@ -295,6 +314,11 @@ export function ProviderForm({
     } else if (appId === "gemini") {
       return geminiProviderPresets.map<PresetEntry>((preset, index) => ({
         id: `gemini-${index}`,
+        preset,
+      }));
+    } else if (appId === "grok") {
+      return grokProviderPresets.map<PresetEntry>((preset, index) => ({
+        id: `grok-${index}`,
         preset,
       }));
     } else if (appId === "qwen") {
@@ -511,6 +535,23 @@ export function ProviderForm({
           );
           return;
         }
+      } else if (appId === "grok") {
+        if (!baseUrl.trim()) {
+          toast.error(
+            t("providerForm.endpointRequired", {
+              defaultValue: "非官方供应商请填写 API 端点",
+            }),
+          );
+          return;
+        }
+        if (!apiKey.trim()) {
+          toast.error(
+            t("providerForm.apiKeyRequired", {
+              defaultValue: "非官方供应商请填写 API Key",
+            }),
+          );
+          return;
+        }
       }
     }
 
@@ -678,6 +719,20 @@ export function ProviderForm({
     formWebsiteUrl: form.watch("websiteUrl") || "",
   });
 
+  // 使用 API Key 链接 hook (Grok)
+  const {
+    shouldShowApiKeyLink: shouldShowGrokApiKeyLink,
+    websiteUrl: grokWebsiteUrl,
+    isPartner: isGrokPartner,
+    partnerPromotionKey: grokPartnerPromotionKey,
+  } = useApiKeyLink({
+    appId: "grok",
+    category,
+    selectedPresetId,
+    presetEntries,
+    formWebsiteUrl: form.watch("websiteUrl") || "",
+  });
+
   // 使用 API Key 链接 hook (Qwen)
   const {
     shouldShowApiKeyLink: shouldShowQwenApiKeyLink,
@@ -764,6 +819,21 @@ export function ProviderForm({
         name: preset.name,
         websiteUrl: preset.websiteUrl ?? "",
         settingsConfig: JSON.stringify(preset.settingsConfig, null, 2),
+        icon: preset.icon ?? "",
+        iconColor: preset.iconColor ?? "",
+      });
+      return;
+    }
+
+    if (appId === "grok") {
+      const preset = entry.preset as GrokProviderPreset;
+      const config = preset.settingsConfig ?? {};
+
+      // 更新表单其他字段
+      form.reset({
+        name: preset.name,
+        websiteUrl: preset.websiteUrl ?? "",
+        settingsConfig: JSON.stringify(config, null, 2),
         icon: preset.icon ?? "",
         iconColor: preset.iconColor ?? "",
       });
@@ -881,6 +951,45 @@ export function ProviderForm({
             shouldShowModelField={category !== "official"}
             modelName={codexModelName}
             onModelNameChange={handleCodexModelNameChange}
+            speedTestEndpoints={speedTestEndpoints}
+          />
+        )}
+
+        {/* Grok 专属字段 */}
+        {appId === "grok" && (
+          <GrokFormFields
+            providerId={providerId}
+            shouldShowApiKey={shouldShowApiKey(
+              form.watch("settingsConfig"),
+              isEditMode,
+            )}
+            apiKey={apiKey}
+            onApiKeyChange={handleApiKeyChange}
+            category={category}
+            shouldShowApiKeyLink={shouldShowGrokApiKeyLink}
+            websiteUrl={grokWebsiteUrl}
+            isPartner={isGrokPartner}
+            partnerPromotionKey={grokPartnerPromotionKey}
+            shouldShowSpeedTest={shouldShowSpeedTest}
+            baseUrl={baseUrl}
+            onBaseUrlChange={handleGrokBaseUrlChange}
+            isEndpointModalOpen={isEndpointModalOpen}
+            onEndpointModalToggle={setIsEndpointModalOpen}
+            onCustomEndpointsChange={isEditMode ? undefined : (endpoints) => setDraftCustomEndpoints(endpoints)}
+            shouldShowModelField={true}
+            model={(() => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                return config.defaultModel || "";
+              } catch {
+                return "";
+              }
+            })()}
+            onModelChange={(value) => {
+              const config = JSON.parse(form.watch("settingsConfig") || "{}");
+              config.defaultModel = value.trim();
+              form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+            }}
             speedTestEndpoints={speedTestEndpoints}
           />
         )}

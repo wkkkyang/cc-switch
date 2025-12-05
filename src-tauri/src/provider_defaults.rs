@@ -149,6 +149,21 @@ pub static DEFAULT_PROVIDER_ICONS: Lazy<HashMap<&'static str, ProviderIcon>> = L
         },
     );
 
+    m.insert(
+        "grok",
+        ProviderIcon {
+            name: "grok",
+            color: "#000000",
+        },
+    );
+    m.insert(
+        "xai",
+        ProviderIcon {
+            name: "grok",
+            color: "#000000",
+        },
+    );
+
     // 云平台
     m.insert(
         "aws",

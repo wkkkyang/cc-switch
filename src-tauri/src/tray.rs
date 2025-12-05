@@ -50,7 +50,7 @@ pub struct TrayAppSection {
     pub log_name: &'static str,
 }
 
-pub const TRAY_SECTIONS: [TrayAppSection; 3] = [
+pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Claude,
         prefix: "claude_",
@@ -74,6 +74,22 @@ pub const TRAY_SECTIONS: [TrayAppSection; 3] = [
         empty_id: "gemini_empty",
         header_label: "─── Gemini ───",
         log_name: "Gemini",
+    },
+    TrayAppSection {
+        app_type: AppType::Grok,
+        prefix: "grok_",
+        header_id: "grok_header",
+        empty_id: "grok_empty",
+        header_label: "─── Grok ───",
+        log_name: "Grok",
+    },
+    TrayAppSection {
+        app_type: AppType::Qwen,
+        prefix: "qwen_",
+        header_id: "qwen_header",
+        empty_id: "qwen_empty",
+        header_label: "─── Qwen ───",
+        log_name: "Qwen",
     },
 ];
 

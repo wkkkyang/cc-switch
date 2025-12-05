@@ -4,6 +4,7 @@ import type { AppId } from "@/lib/api";
 import { providerPresets } from "@/config/claudeProviderPresets";
 import { codexProviderPresets } from "@/config/codexProviderPresets";
 import { geminiProviderPresets } from "@/config/geminiProviderPresets";
+import { grokProviderPresets } from "@/config/grokProviderPresets";
 import { qwenProviderPresets } from "@/config/qwenProviderPresets";
 
 interface UseProviderCategoryProps {
@@ -43,7 +44,7 @@ export function useProviderCategory({
     if (!selectedPresetId) return;
 
     // 从预设 ID 提取索引
-    const match = selectedPresetId.match(/^(claude|codex|gemini|qwen)-(\d+)$/);
+    const match = selectedPresetId.match(/^(claude|codex|gemini|grok|qwen)-(\d+)$/);
     if (!match) return;
 
     const [, type, indexStr] = match;
@@ -67,6 +68,13 @@ export function useProviderCategory({
       const preset = geminiProviderPresets[index];
       if (preset) {
         setCategory(preset.category || undefined);
+      }
+    } else if (type === "grok" && appId === "grok") {
+      const preset = grokProviderPresets[index];
+      if (preset) {
+        setCategory(
+          preset.category || (preset.isOfficial ? "official" : undefined),
+        );
       }
     } else if (type === "qwen" && appId === "qwen") {
       const preset = qwenProviderPresets[index];

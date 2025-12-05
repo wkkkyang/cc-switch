@@ -12,6 +12,7 @@
 mod claude;
 mod codex;
 mod gemini;
+mod grok;
 mod validation;
 
 // 重新导出公共 API
@@ -25,4 +26,7 @@ pub use codex::{
 pub use gemini::{
     import_from_gemini, remove_server_from_gemini, sync_enabled_to_gemini,
     sync_single_server_to_gemini,
+};
+pub use grok::{
+    import_from_grok, remove_server_from_grok, sync_enabled_to_grok, sync_single_server_to_grok,
 };

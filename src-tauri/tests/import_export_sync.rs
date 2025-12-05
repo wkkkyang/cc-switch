@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use cc_switch_lib::{
-    get_claude_settings_path, read_json_file, AppError, AppType, ConfigService, MultiAppConfig,
+    get_claude_settings_path, get_grok_settings_path, read_json_file, AppError, AppType, ConfigService, MultiAppConfig,
     Provider, ProviderMeta,
 };
 
@@ -558,6 +558,7 @@ command = "echo"
                 claude: false,
                 codex: false, // 初始未启用
                 gemini: false,
+                grok: false,
                 qwen: false,
             },
             description: None,
@@ -681,6 +682,7 @@ fn import_from_claude_merges_into_config() {
                 claude: false, // 初始未启用
                 codex: false,
                 gemini: false,
+                grok: false,
                 qwen: false,
             },
             description: None,
@@ -994,4 +996,83 @@ fn export_sql_returns_error_for_invalid_path() {
         }
         other => panic!("expected IoContext or Io error, got {other:?}"),
     }
+}
+
+#[test]
+fn sync_grok_enabled_mcp_from_unified_structure() {
+    let _guard = test_mutex().lock().expect("acquire test mutex");
+    reset_test_fs();
+    let mut config = MultiAppConfig::default();
+
+    // 使用统一结构（v3.7.0+）
+    config.mcp.servers = Some(std::collections::HashMap::new());
+    let servers = config.mcp.servers.as_mut().unwrap();
+    
+    servers.insert(
+        "stdio-enabled".to_string(),
+        cc_switch_lib::McpServer {
+            id: "stdio-enabled".to_string(),
+            name: "stdio-enabled".to_string(),
+            server: json!({
+                "type": "stdio",
+                "command": "echo",
+                "args": ["hello"]
+            }),
+            apps: cc_switch_lib::McpApps {
+                claude: false,
+                codex: false,
+                gemini: false,
+                grok: true, // 启用 Grok
+                qwen: false,
+            },
+            description: None,
+            homepage: None,
+            docs: None,
+            tags: Vec::new(),
+        },
+    );
+
+    servers.insert(
+        "http-disabled".to_string(),
+        cc_switch_lib::McpServer {
+            id: "http-disabled".to_string(),
+            name: "http-disabled".to_string(),
+            server: json!({
+                "type": "http",
+                "url": "https://example.com"
+            }),
+            apps: cc_switch_lib::McpApps {
+                claude: false,
+                codex: false,
+                gemini: false,
+                grok: false, // 未启用 Grok
+                qwen: false,
+            },
+            description: None,
+            homepage: None,
+            docs: None,
+            tags: Vec::new(),
+        },
+    );
+
+    cc_switch_lib::sync_enabled_to_grok(&config).expect("sync Grok MCP");
+
+    let grok_path = get_grok_settings_path();
+    assert!(grok_path.exists(), "grok config should exist");
+    let text = fs::read_to_string(&grok_path).expect("read user-settings.json");
+    let value: serde_json::Value = serde_json::from_str(&text).expect("parse grok json");
+    let mcp_servers = value
+        .get("mcpServers")
+        .and_then(|v| v.as_object())
+        .expect("mcpServers map");
+    assert_eq!(mcp_servers.len(), 1, "only grok-enabled entries should be written");
+    let enabled = mcp_servers.get("stdio-enabled").expect("enabled entry");
+    assert_eq!(
+        enabled
+            .get("command")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default(),
+        "echo"
+    );
+    assert!(mcp_servers.get("http-disabled").is_none());
 }

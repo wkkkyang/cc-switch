@@ -64,6 +64,7 @@ impl Database {
                 enabled_claude BOOLEAN NOT NULL DEFAULT 0,
                 enabled_codex BOOLEAN NOT NULL DEFAULT 0,
                 enabled_gemini BOOLEAN NOT NULL DEFAULT 0,
+                enabled_grok BOOLEAN NOT NULL DEFAULT 0,
                 enabled_qwen BOOLEAN NOT NULL DEFAULT 0
             )",
             [],
@@ -153,6 +154,11 @@ impl Database {
                         Self::migrate_v0_to_v1(conn)?;
                         Self::set_user_version(conn, 1)?;
                     }
+                    1 => {
+                        log::info!("检测到 user_version=1，迁移到 2（添加 Grok MCP 列）");
+                        Self::migrate_v1_to_v2(conn)?;
+                        Self::set_user_version(conn, 2)?;
+                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -241,6 +247,17 @@ impl Database {
         Self::add_column_if_missing(conn, "skill_repos", "enabled", "BOOLEAN NOT NULL DEFAULT 1")?;
         // 注意: skills_path 字段已被移除，因为现在支持全仓库递归扫描
 
+        Ok(())
+    }
+
+    /// v1 -> v2 迁移：添加 enabled_grok 列
+    fn migrate_v1_to_v2(conn: &Connection) -> Result<(), AppError> {
+        Self::add_column_if_missing(
+            conn,
+            "mcp_servers",
+            "enabled_grok",
+            "BOOLEAN NOT NULL DEFAULT 0",
+        )?;
         Ok(())
     }
 

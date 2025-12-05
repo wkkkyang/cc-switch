@@ -12,6 +12,7 @@ pub fn prompt_file_path(app: &AppType) -> Result<PathBuf, AppError> {
         AppType::Claude => get_base_dir_with_fallback(get_claude_settings_path(), ".claude")?,
         AppType::Codex => get_base_dir_with_fallback(get_codex_auth_path(), ".codex")?,
         AppType::Gemini => get_gemini_dir(),
+        AppType::Grok => crate::grok_config::get_grok_dir(),
         AppType::Qwen => {
             // Qwen 配置目录（暂时使用默认目录）
             crate::test_utils::home_dir()
@@ -24,6 +25,7 @@ pub fn prompt_file_path(app: &AppType) -> Result<PathBuf, AppError> {
         AppType::Claude => "CLAUDE.md",
         AppType::Codex => "AGENTS.md",
         AppType::Gemini => "GEMINI.md",
+        AppType::Grok => "GROK.md",
         AppType::Qwen => "QWEN.md",
     };
 

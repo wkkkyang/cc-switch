@@ -6,7 +6,7 @@ import {
 import type { ProviderCategory } from "@/types";
 
 interface UseBaseUrlStateProps {
-  appType: "claude" | "codex" | "gemini" | "qwen";
+  appType: "claude" | "codex" | "gemini" | "grok" | "qwen";
   category: ProviderCategory | undefined;
   settingsConfig: string;
   codexConfig?: string;
@@ -29,6 +29,7 @@ export function useBaseUrlState({
   const [baseUrl, setBaseUrl] = useState("");
   const [codexBaseUrl, setCodexBaseUrl] = useState("");
   const [geminiBaseUrl, setGeminiBaseUrl] = useState("");
+  const [grokBaseUrl, setGrokBaseUrl] = useState("");
   const [qwenBaseUrl, setQwenBaseUrl] = useState("");
   const isUpdatingRef = useRef(false);
 
@@ -83,6 +84,26 @@ export function useBaseUrlState({
       // ignore
     }
   }, [appType, category, settingsConfig, geminiBaseUrl]);
+
+  // 从配置同步到 state（Grok）
+  useEffect(() => {
+    if (appType !== "grok") return;
+    // 只有 official 类别不显示 Base URL 输入框，其他类别都需要回填
+    if (category === "official") return;
+    if (isUpdatingRef.current) return;
+
+    try {
+      const config = JSON.parse(settingsConfig || "{}");
+      const url: unknown = config?.baseURL;
+      const nextUrl = typeof url === "string" ? url.trim() : "";
+      if (nextUrl !== grokBaseUrl) {
+        setGrokBaseUrl(nextUrl);
+        setBaseUrl(nextUrl);
+      }
+    } catch {
+      // ignore
+    }
+  }, [appType, category, settingsConfig, grokBaseUrl]);
 
   // 从Claude配置同步到 state（Qwen）
   useEffect(() => {
@@ -181,6 +202,27 @@ export function useBaseUrlState({
   );
 
   // 处理 Qwen Base URL 变化
+  const handleGrokBaseUrlChange = useCallback(
+    (url: string) => {
+      isUpdatingRef.current = true;
+      setGrokBaseUrl(url);
+      setBaseUrl(url);
+
+      try {
+        const config = JSON.parse(settingsConfig || "{}");
+        const newConfig = { ...config, baseURL: url };
+        onSettingsConfigChange(JSON.stringify(newConfig, null, 2));
+      } catch {
+        // ignore
+      }
+
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 0);
+    },
+    [settingsConfig, onSettingsConfigChange],
+  );
+
   const handleQwenBaseUrlChange = useCallback(
     (url: string) => {
       const sanitized = url.trim();
@@ -222,6 +264,7 @@ export function useBaseUrlState({
     handleClaudeBaseUrlChange,
     handleCodexBaseUrlChange,
     handleGeminiBaseUrlChange,
+    handleGrokBaseUrlChange,
     handleQwenBaseUrlChange,
   };
 }

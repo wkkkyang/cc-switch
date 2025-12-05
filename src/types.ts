@@ -120,6 +120,8 @@ export interface Settings {
   geminiConfigDir?: string;
   // 覆盖 Qwen 配置目录（可选）
   qwenConfigDir?: string;
+  // 覆盖 Grok 配置目录（可选）
+  grokConfigDir?: string;
 
   // ===== 当前供应商 ID（设备级）=====
   // 当前 Claude 供应商 ID（优先于数据库 is_current）
@@ -128,6 +130,8 @@ export interface Settings {
   currentProviderCodex?: string;
   // 当前 Gemini 供应商 ID（优先于数据库 is_current）
   currentProviderGemini?: string;
+  // 当前 Grok 供应商 ID（优先于数据库 is_current）
+  currentProviderGrok?: string;
   // 当前 Qwen 供应商 ID（优先于数据库 is_current）
   currentProviderQwen?: string;
 }
@@ -153,6 +157,7 @@ export interface McpApps {
   claude: boolean;
   codex: boolean;
   gemini: boolean;
+  grok: boolean;
   qwen: boolean;
 }
 

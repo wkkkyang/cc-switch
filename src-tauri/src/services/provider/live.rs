@@ -10,6 +10,7 @@ use crate::app_config::AppType;
 use crate::codex_config::{get_codex_auth_path, get_codex_config_path};
 use crate::config::{delete_file, get_claude_settings_path, read_json_file, write_json_file};
 use crate::error::AppError;
+use crate::grok_config::get_grok_settings_path;
 use crate::provider::Provider;
 use crate::qwen_config::get_qwen_settings_path;
 use crate::services::mcp::McpService;
@@ -34,6 +35,9 @@ pub(crate) enum LiveSnapshot {
     Gemini {
         env: Option<HashMap<String, String>>,
         config: Option<Value>,
+    },
+    Grok {
+        settings: Option<Value>,
     },
 }
 
@@ -88,6 +92,14 @@ impl LiveSnapshot {
                     _ => {}
                 }
             }
+            LiveSnapshot::Grok { settings } => {
+                let path = get_grok_settings_path();
+                if let Some(value) = settings {
+                    write_json_file(&path, value)?;
+                } else if path.exists() {
+                    delete_file(&path)?;
+                }
+            }
         }
         Ok(())
     }
@@ -121,6 +133,12 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
             // Delegate to write_gemini_live which handles env file writing correctly
             write_gemini_live(provider)?;
         }
+        AppType::Grok => {
+            use crate::grok_config::write_grok_settings;
+            use crate::grok_config::GrokSettings;
+            let settings = GrokSettings::from_json_value(&provider.settings_config)?;
+            write_grok_settings(&settings)?;
+        }
         AppType::Qwen => {
             // Qwen 配置写入逻辑
             write_qwen_live(provider)?;
@@ -135,7 +153,7 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
 /// 优先从本地 settings 读取，验证后 fallback 到数据库的 is_current 字段。
 /// 这确保了配置导入后无效 ID 会自动 fallback 到数据库。
 pub fn sync_current_to_live(state: &AppState) -> Result<(), AppError> {
-    for app_type in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Qwen] {
+    for app_type in [AppType::Claude, AppType::Codex, AppType::Gemini, AppType::Grok, AppType::Qwen] {
         // Use validated effective current provider
         let current_id =
             match crate::settings::get_effective_current_provider(&state.db, &app_type)? {
@@ -215,6 +233,17 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
                 "env": env_obj,
                 "config": config_obj
             }))
+        }
+        AppType::Grok => {
+            let path = get_grok_settings_path();
+            if !path.exists() {
+                return Err(AppError::localized(
+                    "grok.live.missing",
+                    "Grok 配置文件不存在",
+                    "Grok settings file is missing",
+                ));
+            }
+            read_json_file(&path)
         }
         AppType::Qwen => {
             // Qwen 配置读取逻辑
@@ -302,6 +331,17 @@ pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool
                 "env": env_obj,
                 "config": config_obj
             })
+        }
+        AppType::Grok => {
+            let path = get_grok_settings_path();
+            if !path.exists() {
+                return Err(AppError::localized(
+                    "grok.live.missing",
+                    "Grok 配置文件不存在",
+                    "Grok settings file is missing",
+                ));
+            }
+            read_json_file(&path)?
         }
         AppType::Qwen => {
             // Qwen 配置读取逻辑

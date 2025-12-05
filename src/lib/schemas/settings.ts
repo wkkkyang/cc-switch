@@ -19,11 +19,15 @@ export const settingsSchema = z.object({
   claudeConfigDir: directorySchema.nullable().optional(),
   codexConfigDir: directorySchema.nullable().optional(),
   geminiConfigDir: directorySchema.nullable().optional(),
+  grokConfigDir: directorySchema.nullable().optional(),
+  qwenConfigDir: directorySchema.nullable().optional(),
 
   // 当前供应商 ID（设备级）
   currentProviderClaude: z.string().optional(),
   currentProviderCodex: z.string().optional(),
   currentProviderGemini: z.string().optional(),
+  currentProviderGrok: z.string().optional(),
+  currentProviderQwen: z.string().optional(),
 });
 
 export type SettingsFormData = z.infer<typeof settingsSchema>;

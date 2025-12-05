@@ -115,6 +115,21 @@ pub(crate) fn build_provider_from_request(
         AppType::Claude => build_claude_settings(request),
         AppType::Codex => build_codex_settings(request),
         AppType::Gemini => build_gemini_settings(request),
+        AppType::Grok => {
+            // Grok settings construction
+            let mut map = serde_json::Map::new();
+            if let Some(key) = &request.api_key {
+                map.insert("apiKey".to_string(), serde_json::json!(key));
+            }
+            if let Some(endpoint) = &request.endpoint {
+                map.insert("baseURL".to_string(), serde_json::json!(endpoint));
+            }
+            if let Some(model) = &request.model {
+                map.insert("defaultModel".to_string(), serde_json::json!(model));
+            }
+            map.insert("settingsVersion".to_string(), serde_json::json!(2));
+            serde_json::Value::Object(map)
+        }
         AppType::Qwen => {
             // Qwen 设置构建逻辑（暂时返回空对象）
             // TODO: 实现 Qwen 设置构建逻辑
@@ -331,6 +346,7 @@ pub fn parse_and_merge_config(
         "claude" => merge_claude_config(&mut merged, &config_value)?,
         "codex" => merge_codex_config(&mut merged, &config_value)?,
         "gemini" => merge_gemini_config(&mut merged, &config_value)?,
+        "grok" => merge_grok_config(&mut merged, &config_value)?,
         "" => {
             // No app specified, skip merging
             return Ok(merged);
@@ -495,6 +511,45 @@ fn merge_gemini_config(
         request.homepage = infer_homepage_from_endpoint(request.endpoint.as_ref().unwrap());
         if request.homepage.is_none() {
             request.homepage = Some("https://ai.google.dev".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+/// Merge Grok configuration from config file
+fn merge_grok_config(
+    request: &mut DeepLinkImportRequest,
+    config: &serde_json::Value,
+) -> Result<(), AppError> {
+    // Grok uses simple key-value structure similar to settings.json
+    if request.api_key.is_none() || request.api_key.as_ref().unwrap().is_empty() {
+        if let Some(api_key) = config.get("apiKey").and_then(|v| v.as_str()) {
+            request.api_key = Some(api_key.to_string());
+        }
+    }
+
+    if request.endpoint.is_none() || request.endpoint.as_ref().unwrap().is_empty() {
+        if let Some(base_url) = config.get("baseURL").and_then(|v| v.as_str()) {
+            request.endpoint = Some(base_url.to_string());
+        }
+    }
+
+    if request.model.is_none() {
+        request.model = config
+            .get("defaultModel")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+    }
+
+    // Auto-fill homepage from endpoint
+    if (request.homepage.is_none() || request.homepage.as_ref().unwrap().is_empty())
+        && request.endpoint.is_some()
+        && !request.endpoint.as_ref().unwrap().is_empty()
+    {
+        request.homepage = infer_homepage_from_endpoint(request.endpoint.as_ref().unwrap());
+        if request.homepage.is_none() {
+            request.homepage = Some("https://x.ai".to_string());
         }
     }
 
