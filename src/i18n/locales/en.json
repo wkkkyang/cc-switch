@@ -105,6 +105,9 @@
     "geminiConfig": "Gemini Configuration",
     "geminiConfigHint": "Use .env format to configure Gemini",
     "form": {
+      "useDefaultModel": "Use default model",
+      "model": "Model",
+      "modelPlaceholder": "e.g., grok-code-fast-1",
       "gemini": {
         "model": "Model",
         "oauthTitle": "OAuth Authentication Mode",
@@ -194,11 +197,14 @@
     "codexConfigDirDescription": "Override Codex configuration directory.",
     "geminiConfigDir": "Gemini Configuration Directory",
     "geminiConfigDirDescription": "Override Gemini configuration directory (.env).",
+    "grokConfigDir": "Grok Configuration Directory",
+    "grokConfigDirDescription": "Override Grok configuration directory (user-settings.json).",
     "qwenConfigDir": "Qwen Configuration Directory",
     "qwenConfigDirDescription": "Override Qwen configuration directory.",
     "browsePlaceholderClaude": "e.g., /home/<your-username>/.claude",
     "browsePlaceholderCodex": "e.g., /home/<your-username>/.codex",
     "browsePlaceholderGemini": "e.g., /home/<your-username>/.gemini",
+    "browsePlaceholderGrok": "e.g., /home/<your-username>/.grok",
     "browsePlaceholderQwen": "e.g., /home/<your-username>/.qwen",
     "browseDirectory": "Browse Directory",
     "resetDefault": "Reset to default directory (takes effect after saving)",
@@ -230,6 +236,7 @@
     "claude": "Claude Code",
     "codex": "Codex",
     "gemini": "Gemini",
+    "grok": "Grok",
     "qwen": "Qwen"
   },
   "console": {

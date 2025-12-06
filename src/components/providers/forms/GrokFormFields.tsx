@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import EndpointSpeedTest from "./EndpointSpeedTest";
 import { ApiKeySection, EndpointField } from "./shared";
 import type { ProviderCategory } from "@/types";
@@ -33,9 +35,16 @@ interface GrokFormFieldsProps {
   shouldShowModelField: boolean;
   model: string;
   onModelChange: (value: string) => void;
+  useDefaultModel: boolean;
+  onUseDefaultModelChange: (checked: boolean) => void;
+  defaultModelCandidate?: string;
 
   // Speed Test Endpoints
   speedTestEndpoints: EndpointCandidate[];
+  // Models list management
+  models: string[];
+  onAddModel: (value: string) => void;
+  onRemoveModel: (value: string) => void;
 }
 
 export function GrokFormFields({
@@ -57,9 +66,16 @@ export function GrokFormFields({
   shouldShowModelField,
   model,
   onModelChange,
+  useDefaultModel,
+  onUseDefaultModelChange,
+  defaultModelCandidate,
   speedTestEndpoints,
+  models,
+  onAddModel,
+  onRemoveModel,
 }: GrokFormFieldsProps) {
   const { t } = useTranslation();
+  const [newModel, setNewModel] = useState("");
 
   return (
     <>
@@ -90,21 +106,82 @@ export function GrokFormFields({
         />
       )}
 
-      {/* Model 输入框 */}
+      {/* Model 选择：默认/自定义 */}
       {shouldShowModelField && (
-        <div>
-          <FormLabel htmlFor="grok-model">
-            {t("provider.form.model", { defaultValue: "模型" })}
-          </FormLabel>
-          <Input
-            id="grok-model"
-            value={model}
-            onChange={(e) => onModelChange(e.target.value)}
-            placeholder={t("provider.form.modelPlaceholder", {
-              defaultValue: "例如：grok-code-fast-1",
-            })}
-            className="mt-2"
-          />
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="grok-use-default-model"
+              checked={useDefaultModel}
+              onCheckedChange={(v) => onUseDefaultModelChange(Boolean(v))}
+            />
+            <label htmlFor="grok-use-default-model" className="text-sm">
+              {t("provider.form.useDefaultModel", { defaultValue: "使用默认模型" })}
+            </label>
+          </div>
+          <div>
+            <FormLabel htmlFor="grok-model">
+              {t("provider.form.model", { defaultValue: "模型" })}
+            </FormLabel>
+            <Input
+              id="grok-model"
+              value={model}
+              onChange={(e) => onModelChange(e.target.value)}
+              placeholder={
+                useDefaultModel
+                  ? (defaultModelCandidate || "grok-code-fast-1")
+                  : t("provider.form.modelPlaceholder", {
+                      defaultValue: "例如：grok-code-fast-1",
+                    })
+              }
+              disabled={useDefaultModel}
+              className="mt-2"
+            />
+          </div>
+
+          {/* 模型列表管理 */}
+          <div className="space-y-2">
+            <FormLabel>{t("provider.form.models", { defaultValue: "模型列表" })}</FormLabel>
+            <div className="flex items-center gap-2">
+              <Input
+                value={newModel}
+                onChange={(e) => setNewModel(e.target.value)}
+                placeholder={t("provider.form.modelPlaceholder", { defaultValue: "例如：grok-4-1" })}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                className="px-3 py-2 text-xs rounded-md border border-border/20 hover:bg-accent"
+                onClick={() => {
+                  const v = newModel.trim();
+                  if (!v) return;
+                  onAddModel(v);
+                  setNewModel("");
+                }}
+              >
+                {t("common.add")}
+              </button>
+            </div>
+            {models && models.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {models.map((m) => (
+                  <div
+                    key={m}
+                    className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-muted text-xs"
+                  >
+                    <span className="font-mono">{m}</span>
+                    <button
+                      type="button"
+                      className="px-1.5 py-0.5 rounded border border-border/20 hover:bg-destructive/10"
+                      onClick={() => onRemoveModel(m)}
+                    >
+                      {t("common.delete")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
 

@@ -105,6 +105,9 @@
     "geminiConfig": "Gemini 配置",
     "geminiConfigHint": "使用 .env 格式配置 Gemini",
     "form": {
+      "useDefaultModel": "使用默认模型",
+      "model": "模型",
+      "modelPlaceholder": "例如：grok-code-fast-1",
       "gemini": {
         "model": "模型",
         "oauthTitle": "OAuth 认证模式",
@@ -233,6 +236,7 @@
     "claude": "Claude Code",
     "codex": "Codex",
     "gemini": "Gemini",
+    "grok": "Grok",
     "qwen": "通义千问"
   },
   "console": {

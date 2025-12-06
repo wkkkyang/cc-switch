@@ -975,20 +975,115 @@ export function ProviderForm({
             onBaseUrlChange={handleGrokBaseUrlChange}
             isEndpointModalOpen={isEndpointModalOpen}
             onEndpointModalToggle={setIsEndpointModalOpen}
-            onCustomEndpointsChange={isEditMode ? undefined : (endpoints) => setDraftCustomEndpoints(endpoints)}
+            onCustomEndpointsChange={
+              isEditMode ? undefined : (endpoints) => setDraftCustomEndpoints(endpoints)
+            }
             shouldShowModelField={true}
             model={(() => {
               try {
                 const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                return config.defaultModel || "";
+                return (config.defaultModel ?? "").toString();
               } catch {
                 return "";
               }
             })()}
             onModelChange={(value) => {
-              const config = JSON.parse(form.watch("settingsConfig") || "{}");
-              config.defaultModel = value.trim();
-              form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                const v = value.trim();
+                if (!v) {
+                  // 空值 -> 使用默认模型（删除字段）
+                  if (Object.prototype.hasOwnProperty.call(config, "defaultModel")) {
+                    delete config.defaultModel;
+                  }
+                } else {
+                  config.defaultModel = v;
+                }
+                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+              } catch {
+                // ignore
+              }
+            }}
+            useDefaultModel={(() => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                const has = Object.prototype.hasOwnProperty.call(config, "defaultModel");
+                const v = (config.defaultModel ?? "").toString().trim();
+                return !has || v.length === 0;
+              } catch {
+                return true;
+              }
+            })()}
+            onUseDefaultModelChange={(checked) => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                if (checked) {
+                  if (Object.prototype.hasOwnProperty.call(config, "defaultModel")) {
+                    delete config.defaultModel;
+                  }
+                } else {
+                  // 取消“使用默认”，如果当前没有默认模型则填入候选
+                  const current = (config.defaultModel ?? "").toString().trim();
+                  if (!current) {
+                    const models = Array.isArray(config.models) ? config.models : [];
+                    const candidate = models[0] || "grok-code-fast-1";
+                    config.defaultModel = candidate;
+                  }
+                }
+                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+              } catch {
+                // ignore
+              }
+            }}
+            defaultModelCandidate={(() => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                const v = (config.defaultModel ?? "").toString().trim();
+                if (v) return v;
+                const models = Array.isArray(config.models) ? config.models : [];
+                return models[0] || "grok-code-fast-1";
+              } catch {
+                return "grok-code-fast-1";
+              }
+            })()}
+            models={(() => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                return Array.isArray(config.models) ? config.models : [];
+              } catch {
+                return [] as string[];
+              }
+            })()}
+            onAddModel={(value) => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                const models: string[] = Array.isArray(config.models) ? config.models : [];
+                const v = value.trim();
+                if (!v) return;
+                if (!models.includes(v)) {
+                  models.push(v);
+                }
+                config.models = models;
+                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+              } catch {
+                // ignore
+              }
+            }}
+            onRemoveModel={(value) => {
+              try {
+                const config = JSON.parse(form.watch("settingsConfig") || "{}");
+                const models: string[] = Array.isArray(config.models) ? config.models : [];
+                const v = value.trim();
+                const next = models.filter((m) => m !== v);
+                config.models = next;
+                if ((config.defaultModel ?? "").toString().trim() === v) {
+                  // 如果删除的是当前默认模型，则删除 defaultModel 字段，回退为“使用默认”
+                  delete config.defaultModel;
+                }
+                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+              } catch {
+                // ignore
+              }
             }}
             speedTestEndpoints={speedTestEndpoints}
           />

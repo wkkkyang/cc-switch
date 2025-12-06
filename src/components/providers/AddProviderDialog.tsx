@@ -161,9 +161,11 @@ export function AddProviderDialog({
       ? t("provider.addClaudeProvider")
       : appId === "codex"
         ? t("provider.addCodexProvider")
-        : appId === "qwen"
-          ? t("provider.addQwenProvider")
-          : t("provider.addGeminiProvider");
+        : appId === "grok"
+          ? t("provider.addGrokProvider")
+          : appId === "qwen"
+            ? t("provider.addQwenProvider")
+            : t("provider.addGeminiProvider");
 
   const footer = (
     <>
