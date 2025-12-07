@@ -104,7 +104,7 @@ export function GrokFormFields({
         <div className="space-y-3">
           <div>
             <FormLabel htmlFor="grok-model">
-              {t("provider.form.model", { defaultValue: "模型" })}
+              {t("provider.form.defaultModel", { defaultValue: "默认模型" })}
             </FormLabel>
             <Input
               id="grok-model"
@@ -129,7 +129,7 @@ export function GrokFormFields({
               />
               <button
                 type="button"
-                className="px-3 py-2 text-xs rounded-md border border-border/20 hover:bg-accent"
+                className="px-3 py-2 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={() => {
                   const v = newModel.trim();
                   if (!v) return;
