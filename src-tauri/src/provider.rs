@@ -38,6 +38,7 @@ pub struct Provider {
     pub icon_color: Option<String>,
     /// 是否置顶
     #[serde(rename = "isPinned")]
+    #[serde(default)]
     pub is_pinned: bool,
 }
 
