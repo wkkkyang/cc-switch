@@ -9,7 +9,6 @@ export const grokProviderPresets: GrokProviderPreset[] = [
     settingsConfig: {
       apiKey: "",
       baseURL: "https://api.x.ai/v1",
-      defaultModel: "grok-code-fast-1",
       models: [
         "grok-4-1-fast-reasoning",
         "grok-4-1-fast-non-reasoning",
@@ -37,7 +36,6 @@ export const grokProviderPresets: GrokProviderPreset[] = [
     settingsConfig: {
       apiKey: "",
       baseURL: "https://open.bigmodel.cn/api/coding/paas/v4",
-      defaultModel: "glm-4.6",
       models: [
          "glm-4.6",
          "glm-4.5-air"

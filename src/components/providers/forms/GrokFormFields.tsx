@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import EndpointSpeedTest from "./EndpointSpeedTest";
 import { ApiKeySection, EndpointField } from "./shared";
 import type { ProviderCategory } from "@/types";
@@ -35,9 +34,6 @@ interface GrokFormFieldsProps {
   shouldShowModelField: boolean;
   model: string;
   onModelChange: (value: string) => void;
-  useDefaultModel: boolean;
-  onUseDefaultModelChange: (checked: boolean) => void;
-  defaultModelCandidate?: string;
 
   // Speed Test Endpoints
   speedTestEndpoints: EndpointCandidate[];
@@ -66,9 +62,6 @@ export function GrokFormFields({
   shouldShowModelField,
   model,
   onModelChange,
-  useDefaultModel,
-  onUseDefaultModelChange,
-  defaultModelCandidate,
   speedTestEndpoints,
   models,
   onAddModel,
@@ -106,19 +99,9 @@ export function GrokFormFields({
         />
       )}
 
-      {/* Model 选择：默认/自定义 */}
+      {/* Model 选择 */}
       {shouldShowModelField && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="grok-use-default-model"
-              checked={useDefaultModel}
-              onCheckedChange={(v) => onUseDefaultModelChange(Boolean(v))}
-            />
-            <label htmlFor="grok-use-default-model" className="text-sm">
-              {t("provider.form.useDefaultModel", { defaultValue: "使用默认模型" })}
-            </label>
-          </div>
           <div>
             <FormLabel htmlFor="grok-model">
               {t("provider.form.model", { defaultValue: "模型" })}
@@ -127,14 +110,9 @@ export function GrokFormFields({
               id="grok-model"
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
-              placeholder={
-                useDefaultModel
-                  ? (defaultModelCandidate || "grok-code-fast-1")
-                  : t("provider.form.modelPlaceholder", {
-                      defaultValue: "例如：grok-code-fast-1",
-                    })
-              }
-              disabled={useDefaultModel}
+              placeholder={t("provider.form.modelPlaceholder", {
+                defaultValue: "例如：grok-code-fast-1",
+              })}
               className="mt-2"
             />
           </div>

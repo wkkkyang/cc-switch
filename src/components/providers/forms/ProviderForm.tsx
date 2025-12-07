@@ -74,7 +74,6 @@ const GROK_DEFAULT_CONFIG = JSON.stringify(
   {
     apiKey: "",
     baseURL: "",
-    defaultModel: "grok-code-fast-1",
     models: [],
     settingsVersion: 2,
   },
@@ -992,7 +991,7 @@ export function ProviderForm({
                 const config = JSON.parse(form.watch("settingsConfig") || "{}");
                 const v = value.trim();
                 if (!v) {
-                  // 空值 -> 使用默认模型（删除字段）
+                  // 空值 -> 删除字段
                   if (Object.prototype.hasOwnProperty.call(config, "defaultModel")) {
                     delete config.defaultModel;
                   }
@@ -1004,48 +1003,6 @@ export function ProviderForm({
                 // ignore
               }
             }}
-            useDefaultModel={(() => {
-              try {
-                const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                const has = Object.prototype.hasOwnProperty.call(config, "defaultModel");
-                const v = (config.defaultModel ?? "").toString().trim();
-                return !has || v.length === 0;
-              } catch {
-                return true;
-              }
-            })()}
-            onUseDefaultModelChange={(checked) => {
-              try {
-                const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                if (checked) {
-                  if (Object.prototype.hasOwnProperty.call(config, "defaultModel")) {
-                    delete config.defaultModel;
-                  }
-                } else {
-                  // 取消“使用默认”，如果当前没有默认模型则填入候选
-                  const current = (config.defaultModel ?? "").toString().trim();
-                  if (!current) {
-                    const models = Array.isArray(config.models) ? config.models : [];
-                    const candidate = models[0] || "grok-code-fast-1";
-                    config.defaultModel = candidate;
-                  }
-                }
-                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
-              } catch {
-                // ignore
-              }
-            }}
-            defaultModelCandidate={(() => {
-              try {
-                const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                const v = (config.defaultModel ?? "").toString().trim();
-                if (v) return v;
-                const models = Array.isArray(config.models) ? config.models : [];
-                return models[0] || "grok-code-fast-1";
-              } catch {
-                return "grok-code-fast-1";
-              }
-            })()}
             models={(() => {
               try {
                 const config = JSON.parse(form.watch("settingsConfig") || "{}");
