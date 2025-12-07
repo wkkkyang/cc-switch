@@ -22,6 +22,10 @@ pub fn get_grok_settings_path() -> PathBuf {
     get_grok_dir().join("user-settings.json")
 }
 
+fn default_settings_version() -> u32 {
+    2
+}
+
 /// Grok 配置结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GrokSettings {
@@ -37,10 +41,7 @@ pub struct GrokSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub models: Vec<String>,
 
-    #[serde(rename = "mcpServers", skip_serializing_if = "Option::is_none")]
-    pub mcp_servers: Option<HashMap<String, Value>>,
-
-    #[serde(rename = "settingsVersion")]
+    #[serde(rename = "settingsVersion", default = "default_settings_version")]
     pub settings_version: u32,
 }
 
@@ -65,7 +66,6 @@ impl GrokSettings {
                 "grok-3-mini".to_string(),
                 "grok-3-mini-fast".to_string(),
             ],
-            mcp_servers: None,
             settings_version: 2,
         }
     }
@@ -110,46 +110,16 @@ pub fn write_grok_settings(settings: &GrokSettings) -> Result<(), AppError> {
 }
 
 /// 读取 Grok user-settings.json 中的 mcpServers 映射
+/// 注意：此函数已被禁用，因为 mcpServers 功能已被移除
 pub fn read_mcp_servers_map() -> Result<HashMap<String, Value>, AppError> {
-    let settings = read_grok_settings()?;
-    Ok(settings.mcp_servers.unwrap_or_default())
+    // 返回空的 HashMap，因为 mcpServers 功能已被移除
+    Ok(HashMap::new())
 }
 
 /// 将给定的启用 MCP 服务器映射写入到 Grok user-settings.json 的 mcpServers 字段
-pub fn set_mcp_servers_map(servers: &HashMap<String, Value>) -> Result<(), AppError> {
-    let mut settings = read_grok_settings()?;
-    
-    // 构建 mcpServers 对象：移除 UI 辅助字段（enabled/source），仅保留实际 MCP 规范
-    let mut out: HashMap<String, Value> = HashMap::new();
-    for (id, spec) in servers.iter() {
-        let mut obj = if let Some(map) = spec.as_object() {
-            map.clone()
-        } else {
-            return Err(AppError::McpValidation(format!(
-                "MCP 服务器 '{id}' 不是对象"
-            )));
-        };
-
-        if let Some(server_val) = obj.remove("server") {
-            let server_obj = server_val.as_object().cloned().ok_or_else(|| {
-                AppError::McpValidation(format!("MCP 服务器 '{id}' server 字段不是对象"))
-            })?;
-            obj = server_obj;
-        }
-
-        obj.remove("enabled");
-        obj.remove("source");
-        obj.remove("id");
-        obj.remove("name");
-        obj.remove("description");
-        obj.remove("tags");
-        obj.remove("homepage");
-        obj.remove("docs");
-
-        out.insert(id.clone(), Value::Object(obj));
-    }
-
-    settings.mcp_servers = Some(out);
-    write_grok_settings(&settings)
+/// 注意：此函数已被禁用，因为 mcpServers 功能已被移除
+pub fn set_mcp_servers_map(_servers: &HashMap<String, Value>) -> Result<(), AppError> {
+    // 空实现 - mcpServers 功能已被移除
+    Ok(())
 }
 

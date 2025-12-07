@@ -173,6 +173,19 @@ export const getApiKeyFromConfig = (
   try {
     const config = JSON.parse(jsonString);
 
+    // Grok: apiKey 位于顶层字段
+    if (appType === "grok") {
+      const grokKey = (config as any)?.apiKey;
+      if (typeof grokKey === "string" && grokKey) {
+        return grokKey;
+      }
+
+      // 兼容旧格式：从 env.ANTHROPIC_AUTH_TOKEN / env.ANTHROPIC_API_KEY 读取
+      const legacyEnv = (config as any)?.env ?? {};
+      const legacyToken = legacyEnv.ANTHROPIC_AUTH_TOKEN ?? legacyEnv.ANTHROPIC_API_KEY;
+      return typeof legacyToken === "string" ? legacyToken : "";
+    }
+
     // Qwen API Key (新格式)
     if (appType === "qwen") {
       const qwenKey = config?.security?.auth?.apiKey;
@@ -296,6 +309,26 @@ export const setApiKeyInConfig = (
   const { createIfMissing = false, appType } = options;
   try {
     const config = JSON.parse(jsonString);
+
+    // Grok API Key: 顶层 apiKey 字段
+    if (appType === "grok") {
+      (config as any).apiKey = apiKey;
+
+      // 清理旧格式遗留字段：env.ANTHROPIC_AUTH_TOKEN / env.ANTHROPIC_API_KEY
+      if ((config as any).env && typeof (config as any).env === "object") {
+        const env = (config as any).env as Record<string, any>;
+        if ("ANTHROPIC_AUTH_TOKEN" in env) {
+          delete env.ANTHROPIC_AUTH_TOKEN;
+        }
+        if ("ANTHROPIC_API_KEY" in env) {
+          delete env.ANTHROPIC_API_KEY;
+        }
+        if (Object.keys(env).length === 0) {
+          delete (config as any).env;
+        }
+      }
+      return JSON.stringify(config, null, 2);
+    }
 
     // Qwen API Key (新格式)
     if (appType === "qwen") {

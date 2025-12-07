@@ -108,6 +108,8 @@
       "useDefaultModel": "使用默认模型",
       "model": "模型",
       "modelPlaceholder": "例如：grok-code-fast-1",
+      "modelsLabel": "可用模型列表 (可选)",
+      "modelsHint": "每行一个模型名称，将写入 Grok 配置的 models 字段。",
       "gemini": {
         "model": "模型",
         "oauthTitle": "OAuth 认证模式",
@@ -208,6 +210,7 @@
     "browsePlaceholderQwen": "例如：/home/<你的用户名>/.qwen",
     "browseDirectory": "浏览目录",
     "resetDefault": "恢复默认目录（需保存后生效）",
+    "openConfigFolder": "打开配置目录",
     "checkForUpdates": "检查更新",
     "updateTo": "更新到 v{{version}}",
     "updating": "更新中...",
@@ -277,7 +280,8 @@
     "aggregatorApiKeyHint": "💡 只需填写 API Key，请求地址已预设",
     "thirdPartyApiKeyHint": "💡 只需填写 API Key，请求地址已预设",
     "customApiKeyHint": "💡 自定义配置需手动填写所有必要字段",
-    "officialHint": "💡 官方供应商使用浏览器登录，无需配置 API Key",
+    "officialHint": "💡 官方供应商通常使用浏览器登录，无需在此额外配置 API Key",
+    "grokOfficialApiKeyHint": "💡 Grok 官方供应商需要在此配置 API Key 才能使用",
     "getApiKey": "获取 API Key",
     "partnerPromotion": {
       "zhipu": "智谱 GLM 是 CC Switch 的官方合作伙伴，使用此链接充值可以获得9折优惠",

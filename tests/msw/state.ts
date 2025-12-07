@@ -57,6 +57,18 @@ const createDefaultProviders = (): ProvidersByApp => ({
       createdAt: Date.now(),
     },
   },
+  grok: {
+    "grok-1": {
+      id: "grok-1",
+      name: "Grok Default",
+      settingsConfig: {
+        apiKey: "test-key",
+      },
+      category: "official",
+      sortIndex: 0,
+      createdAt: Date.now(),
+    },
+  },
   qwen: {
     "qwen-1": {
       id: "qwen-1",
@@ -78,6 +90,7 @@ const createDefaultCurrent = (): CurrentProviderState => ({
   claude: "claude-1",
   codex: "codex-1",
   gemini: "gemini-1",
+  grok: "grok-1",
   qwen: "qwen-1",
 });
 
@@ -100,7 +113,7 @@ let mcpConfigs: McpConfigState = {
       id: "sample",
       name: "Sample Claude Server",
       enabled: true,
-      apps: { claude: true, codex: false, gemini: false, qwen: false },
+      apps: { claude: true, codex: false, gemini: false, grok: false, qwen: false },
       server: {
         type: "stdio",
         command: "claude-server",
@@ -112,7 +125,7 @@ let mcpConfigs: McpConfigState = {
       id: "httpServer",
       name: "HTTP Codex Server",
       enabled: false,
-      apps: { claude: false, codex: true, gemini: false, qwen: false },
+      apps: { claude: false, codex: true, gemini: false, grok: false, qwen: false },
       server: {
         type: "http",
         url: "http://localhost:3000",
@@ -120,6 +133,7 @@ let mcpConfigs: McpConfigState = {
     },
   },
   gemini: {},
+  grok: {},
   qwen: {},
 };
 
@@ -144,7 +158,7 @@ export const resetProviderState = () => {
         id: "sample",
         name: "Sample Claude Server",
         enabled: true,
-        apps: { claude: true, codex: false, gemini: false, qwen: false },
+        apps: { claude: true, codex: false, gemini: false, grok: false, qwen: false },
         server: {
           type: "stdio",
           command: "claude-server",
@@ -156,7 +170,7 @@ export const resetProviderState = () => {
         id: "httpServer",
         name: "HTTP Codex Server",
         enabled: false,
-        apps: { claude: false, codex: true, gemini: false, qwen: false },
+        apps: { claude: false, codex: true, gemini: false, grok: false, qwen: false },
         server: {
           type: "http",
           url: "http://localhost:3000",
@@ -164,6 +178,7 @@ export const resetProviderState = () => {
       },
     },
     gemini: {},
+    grok: {},
     qwen: {},
   };
 };

@@ -108,6 +108,8 @@
       "useDefaultModel": "Use default model",
       "model": "Model",
       "modelPlaceholder": "e.g., grok-code-fast-1",
+      "modelsLabel": "Available models (optional)",
+      "modelsHint": "One model name per row; will be written to Grok config 'models' field.",
       "gemini": {
         "model": "Model",
         "oauthTitle": "OAuth Authentication Mode",
@@ -208,6 +210,7 @@
     "browsePlaceholderQwen": "e.g., /home/<your-username>/.qwen",
     "browseDirectory": "Browse Directory",
     "resetDefault": "Reset to default directory (takes effect after saving)",
+    "openConfigFolder": "Open config folder",
     "checkForUpdates": "Check for Updates",
     "updateTo": "Update to v{{version}}",
     "updating": "Updating...",
@@ -277,7 +280,8 @@
     "aggregatorApiKeyHint": "💡 Only need to fill in API Key, endpoint is preset",
     "thirdPartyApiKeyHint": "💡 Only need to fill in API Key, endpoint is preset",
     "customApiKeyHint": "💡 Custom configuration requires manually filling all necessary fields",
-    "officialHint": "💡 Official provider uses browser login, no API Key needed",
+    "officialHint": "💡 Official providers typically use browser login and may not require an API Key here",
+    "grokOfficialApiKeyHint": "💡 Grok official providers require an API Key configured here before use",
     "getApiKey": "Get API Key",
     "partnerPromotion": {
       "zhipu": "Zhipu GLM is an official partner of CC Switch. Use this link to top up and get a 10% discount",

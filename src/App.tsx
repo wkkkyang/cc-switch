@@ -6,6 +6,7 @@ import {
   Plus,
   Settings,
   ArrowLeft,
+  FolderOpen,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -170,6 +171,20 @@ function App() {
         extractErrorMessage(error) ||
         t("notifications.openLinkFailed", {
           defaultValue: "链接打开失败",
+        });
+      toast.error(detail);
+    }
+  };
+
+  // 打开当前应用的配置目录
+  const handleOpenConfigFolder = async () => {
+    try {
+      await settingsApi.openConfigFolder(activeApp);
+    } catch (error) {
+      const detail =
+        extractErrorMessage(error) ||
+        t("console.openConfigFolderFailed", {
+          defaultValue: "打开配置文件夹失败",
         });
       toast.error(detail);
     }
@@ -377,9 +392,17 @@ function App() {
             {currentView === "providers" && (
               <>
                 <AppSwitcher activeApp={activeApp} onSwitch={setActiveApp} />
-
-                <div className="glass p-1 rounded-xl flex items-center gap-1">
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleOpenConfigFolder}
+                  title={t("settings.openConfigFolder", {
+                    defaultValue: "打开配置目录",
+                  })}
+                  className={`ml-2 ${addActionButtonClass}`}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
 
                 <Button
                   onClick={() => setIsAddOpen(true)}

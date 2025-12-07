@@ -6,6 +6,7 @@ import type { ProviderPreset } from "@/config/claudeProviderPresets";
 import type { CodexProviderPreset } from "@/config/codexProviderPresets";
 import type { GeminiProviderPreset } from "@/config/geminiProviderPresets";
 import type { ProviderCategory } from "@/types";
+import type { AppId } from "@/lib/api";
 
 type PresetEntry = {
   id: string;
@@ -19,6 +20,7 @@ interface ProviderPresetSelectorProps {
   presetCategoryLabels: Record<string, string>;
   onPresetChange: (value: string) => void;
   category?: ProviderCategory; // 当前选中的分类
+  appId?: AppId;
 }
 
 export function ProviderPresetSelector({
@@ -28,6 +30,7 @@ export function ProviderPresetSelector({
   presetCategoryLabels,
   onPresetChange,
   category,
+  appId,
 }: ProviderPresetSelectorProps) {
   const { t } = useTranslation();
 
@@ -35,6 +38,11 @@ export function ProviderPresetSelector({
   const getCategoryHint = (): React.ReactNode => {
     switch (category) {
       case "official":
+        if (appId === "grok") {
+          return t("providerForm.grokOfficialApiKeyHint", {
+            defaultValue: "💡 Grok 官方供应商需要在此配置 API Key 才能使用",
+          });
+        }
         return t("providerForm.officialHint", {
           defaultValue: "💡 官方供应商使用浏览器登录，无需配置 API Key",
         });

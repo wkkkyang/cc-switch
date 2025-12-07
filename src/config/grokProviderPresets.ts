@@ -1,4 +1,3 @@
-import { ProviderCategory } from "../types";
 import { ProviderPreset } from "./claudeProviderPresets";
 
 export type GrokProviderPreset = ProviderPreset;

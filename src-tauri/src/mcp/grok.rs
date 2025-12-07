@@ -66,10 +66,11 @@ fn collect_grok_enabled_servers(config: &MultiAppConfig) -> HashMap<String, Valu
     out
 }
 
-/// 将 config.json 中启用了 Grok 应用的项投影写入 Grok user-settings.json
-pub fn sync_enabled_to_grok(config: &MultiAppConfig) -> Result<(), AppError> {
-    let enabled = collect_grok_enabled_servers(config);
-    crate::grok_config::set_mcp_servers_map(&enabled)
+/// Sync enabled Grok app entries from config.json to Grok user-settings.json
+/// 注意：此函数已被禁用，因为 mcpServers 功能已被移除
+pub fn sync_enabled_to_grok(_config: &MultiAppConfig) -> Result<(), AppError> {
+    // 空实现 - mcpServers 功能已被移除
+    Ok(())
 }
 
 /// 从 Grok user-settings.json 导入 mcpServers 到统一结构（v3.7.0+）
