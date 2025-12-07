@@ -22,6 +22,7 @@ interface ProviderListProps {
   onDuplicate: (provider: Provider) => void;
   onConfigureUsage?: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
+  onTogglePin?: (provider: Provider) => void;
   onCreate?: () => void;
   isLoading?: boolean;
 }
@@ -36,6 +37,7 @@ export function ProviderList({
   onDuplicate,
   onConfigureUsage,
   onOpenWebsite,
+  onTogglePin,
   onCreate,
   isLoading = false,
 }: ProviderListProps) {
@@ -87,6 +89,7 @@ export function ProviderList({
               onDuplicate={onDuplicate}
               onConfigureUsage={onConfigureUsage}
               onOpenWebsite={onOpenWebsite}
+              onTogglePin={onTogglePin}
             />
           ))}
         </div>
@@ -105,6 +108,7 @@ interface SortableProviderCardProps {
   onDuplicate: (provider: Provider) => void;
   onConfigureUsage?: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
+  onTogglePin?: (provider: Provider) => void;
 }
 
 function SortableProviderCard({
@@ -117,6 +121,7 @@ function SortableProviderCard({
   onDuplicate,
   onConfigureUsage,
   onOpenWebsite,
+  onTogglePin,
 }: SortableProviderCardProps) {
   const {
     setNodeRef,
@@ -146,6 +151,7 @@ function SortableProviderCard({
           onConfigureUsage ? (item) => onConfigureUsage(item) : () => undefined
         }
         onOpenWebsite={onOpenWebsite}
+        onTogglePin={onTogglePin}
         dragHandleProps={{
           attributes,
           listeners,

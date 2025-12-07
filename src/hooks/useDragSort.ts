@@ -20,6 +20,18 @@ export function useDragSort(providers: Record<string, Provider>, appId: AppId) {
   const sortedProviders = useMemo(() => {
     const locale = i18n.language === "zh" ? "zh-CN" : "en-US";
     return Object.values(providers).sort((a, b) => {
+      // 置顶的优先
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      // 置顶的之间按 sortIndex 排序
+      if (a.isPinned && b.isPinned) {
+        if (a.sortIndex !== undefined && b.sortIndex !== undefined) {
+          return a.sortIndex - b.sortIndex;
+        }
+      }
+
+      // 非置顶的之间按 sortIndex 排序
       if (a.sortIndex !== undefined && b.sortIndex !== undefined) {
         return a.sortIndex - b.sortIndex;
       }
@@ -64,10 +76,30 @@ export function useDragSort(providers: Record<string, Provider>, appId: AppId) {
       }
 
       const reordered = arrayMove(sortedProviders, oldIndex, newIndex);
-      const updates = reordered.map((provider, index) => ({
-        id: provider.id,
-        sortIndex: index,
-      }));
+
+      // 检查是否跨越了置顶/非置顶边界
+      const activeProvider = sortedProviders[oldIndex];
+      const overProvider = sortedProviders[newIndex];
+
+      const wasPinned = activeProvider.isPinned;
+      const targetPinned = overProvider.isPinned;
+
+      // 更新置顶状态（如果跨越边界）
+      const updates = reordered.map((provider, index) => {
+        const update: any = {
+          id: provider.id,
+          sortIndex: index,
+        };
+
+        // 如果是拖拽的供应商，根据目标位置更新置顶状态
+        if (provider.id === activeProvider.id) {
+          if (wasPinned !== targetPinned) {
+            update.isPinned = targetPinned;
+          }
+        }
+
+        return update;
+      });
 
       try {
         await providersApi.updateSortOrder(updates, appId);

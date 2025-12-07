@@ -284,11 +284,33 @@ impl ProviderService {
         for update in updates {
             if let Some(provider) = providers.get_mut(&update.id) {
                 provider.sort_index = Some(update.sort_index);
+                // 更新置顶状态（如果提供）
+                if let Some(is_pinned) = update.is_pinned {
+                    provider.is_pinned = is_pinned;
+                }
                 state.db.save_provider(app_type.as_str(), provider)?;
             }
         }
 
         Ok(true)
+    }
+
+    /// Update provider pin status
+    pub fn update_pin_status(
+        state: &AppState,
+        app_type: AppType,
+        provider_id: &str,
+        is_pinned: bool,
+    ) -> Result<bool, AppError> {
+        let mut providers = state.db.get_all_providers(app_type.as_str())?;
+
+        if let Some(provider) = providers.get_mut(provider_id) {
+            provider.is_pinned = is_pinned;
+            state.db.save_provider(app_type.as_str(), provider)?;
+            Ok(true)
+        } else {
+            Err(AppError::Database(format!("Provider not found: {}", provider_id)))
+        }
     }
 
     /// Query provider usage (re-export)
@@ -632,4 +654,6 @@ pub struct ProviderSortUpdate {
     pub id: String,
     #[serde(rename = "sortIndex")]
     pub sort_index: usize,
+    #[serde(rename = "isPinned", skip_serializing_if = "Option::is_none")]
+    pub is_pinned: Option<bool>,
 }

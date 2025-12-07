@@ -219,6 +219,19 @@ pub fn update_endpoint_last_used(
         .map_err(|e| e.to_string())
 }
 
+/// 更新供应商置顶状态
+#[tauri::command]
+pub fn update_provider_pin_status(
+    state: State<'_, AppState>,
+    app: String,
+    provider_id: String,
+    is_pinned: bool,
+) -> Result<bool, String> {
+    let app_type = AppType::from_str(&app).map_err(|e| e.to_string())?;
+    ProviderService::update_pin_status(state.inner(), app_type, &provider_id, is_pinned)
+        .map_err(|e| e.to_string())
+}
+
 /// 更新多个供应商的排序
 #[tauri::command]
 pub fn update_providers_sort_order(

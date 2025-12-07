@@ -31,6 +31,7 @@ impl Database {
                 icon_color TEXT,
                 meta TEXT NOT NULL DEFAULT '{}',
                 is_current BOOLEAN NOT NULL DEFAULT 0,
+                is_pinned BOOLEAN NOT NULL DEFAULT 0,
                 PRIMARY KEY (id, app_type)
             )",
             [],
@@ -159,6 +160,11 @@ impl Database {
                         Self::migrate_v1_to_v2(conn)?;
                         Self::set_user_version(conn, 2)?;
                     }
+                    2 => {
+                        log::info!("检测到 user_version=2，迁移到 3（添加供应商置顶功能）");
+                        Self::migrate_v2_to_v3(conn)?;
+                        Self::set_user_version(conn, 3)?;
+                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -256,6 +262,17 @@ impl Database {
             conn,
             "mcp_servers",
             "enabled_grok",
+            "BOOLEAN NOT NULL DEFAULT 0",
+        )?;
+        Ok(())
+    }
+
+    /// v2 -> v3 迁移：添加供应商置顶功能
+    fn migrate_v2_to_v3(conn: &Connection) -> Result<(), AppError> {
+        Self::add_column_if_missing(
+            conn,
+            "providers",
+            "is_pinned",
             "BOOLEAN NOT NULL DEFAULT 0",
         )?;
         Ok(())

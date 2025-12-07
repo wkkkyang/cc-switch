@@ -60,6 +60,7 @@ function App() {
     switchProvider,
     deleteProvider,
     saveUsageScript,
+    togglePin,
   } = useProviderActions(activeApp);
 
   // 监听来自托盘菜单的切换事件
@@ -293,6 +294,7 @@ function App() {
                   onDuplicate={handleDuplicateProvider}
                   onConfigureUsage={setUsageProvider}
                   onOpenWebsite={handleOpenWebsite}
+                  onTogglePin={togglePin}
                   onCreate={() => setIsAddOpen(true)}
                 />
               </div>

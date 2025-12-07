@@ -1,24 +1,28 @@
-import { BarChart3, Check, Copy, Edit, Play, Trash2 } from "lucide-react";
+import { BarChart3, Check, Copy, Edit, Pin, PinOff, Play, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ProviderActionsProps {
   isCurrent: boolean;
+  isPinned?: boolean;
   onSwitch: () => void;
   onEdit: () => void;
   onDuplicate: () => void;
   onConfigureUsage: () => void;
   onDelete: () => void;
+  onTogglePin?: () => void;
 }
 
 export function ProviderActions({
   isCurrent,
+  isPinned,
   onSwitch,
   onEdit,
   onDuplicate,
   onConfigureUsage,
   onDelete,
+  onTogglePin,
 }: ProviderActionsProps) {
   const { t } = useTranslation();
   const iconButtonClass = "h-8 w-8 p-1";
@@ -50,6 +54,17 @@ export function ProviderActions({
       </Button>
 
       <div className="flex items-center gap-1">
+        {onTogglePin && (
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onTogglePin}
+            title={isPinned ? t("provider.unpin", { defaultValue: "取消置顶" }) : t("provider.pin", { defaultValue: "置顶" })}
+            className={iconButtonClass}
+          >
+            {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+          </Button>
+        )}
         <Button
           size="icon"
           variant="ghost"

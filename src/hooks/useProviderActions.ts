@@ -132,12 +132,43 @@ export function useProviderActions(activeApp: AppId) {
     [activeApp, queryClient, t],
   );
 
+  // 切换置顶状态
+  const togglePin = useCallback(
+    async (provider: Provider) => {
+      try {
+        await providersApi.updatePinStatus(provider.id, !provider.isPinned, activeApp);
+        await queryClient.invalidateQueries({
+          queryKey: ["providers", activeApp],
+        });
+
+        toast.success(
+          provider.isPinned
+            ? t("provider.unpinned", {
+                defaultValue: "已取消置顶",
+              })
+            : t("provider.pinned", {
+                defaultValue: "已置顶",
+              }),
+        );
+      } catch (error) {
+        const detail =
+          extractErrorMessage(error) ||
+          t("provider.pinToggleFailed", {
+            defaultValue: "置顶操作失败",
+          });
+        toast.error(detail);
+      }
+    },
+    [activeApp, queryClient, t],
+  );
+
   return {
     addProvider,
     updateProvider,
     switchProvider,
     deleteProvider,
     saveUsageScript,
+    togglePin,
     isLoading:
       addProviderMutation.isPending ||
       updateProviderMutation.isPending ||

@@ -36,6 +36,9 @@ pub struct Provider {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "iconColor")]
     pub icon_color: Option<String>,
+    /// 是否置顶
+    #[serde(rename = "isPinned")]
+    pub is_pinned: bool,
 }
 
 impl Provider {
@@ -58,6 +61,7 @@ impl Provider {
             meta: None,
             icon: None,
             icon_color: None,
+            is_pinned: false,
         }
     }
 }

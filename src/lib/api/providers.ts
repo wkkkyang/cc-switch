@@ -6,6 +6,7 @@ import type { AppId } from "./types";
 export interface ProviderSortUpdate {
   id: string;
   sortIndex: number;
+  isPinned?: boolean;
 }
 
 export interface ProviderSwitchEvent {
@@ -51,6 +52,18 @@ export const providersApi = {
     appId: AppId,
   ): Promise<boolean> {
     return await invoke("update_providers_sort_order", { updates, app: appId });
+  },
+
+  async updatePinStatus(
+    providerId: string,
+    isPinned: boolean,
+    appId: AppId,
+  ): Promise<boolean> {
+    return await invoke("update_provider_pin_status", {
+      providerId,
+      isPinned,
+      app: appId
+    });
   },
 
   async onSwitched(

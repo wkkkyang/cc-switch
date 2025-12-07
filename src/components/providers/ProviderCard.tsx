@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Pin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   DraggableAttributes,
@@ -28,6 +28,7 @@ interface ProviderCardProps {
   onConfigureUsage: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
   onDuplicate: (provider: Provider) => void;
+  onTogglePin?: (provider: Provider) => void;
   dragHandleProps?: DragHandleProps;
 }
 
@@ -76,6 +77,7 @@ export function ProviderCard({
   onConfigureUsage,
   onOpenWebsite,
   onDuplicate,
+  onTogglePin,
   dragHandleProps,
 }: ProviderCardProps) {
   const { t } = useTranslation();
@@ -153,6 +155,9 @@ export function ProviderCard({
               <h3 className="text-base font-semibold leading-none">
                 {provider.name}
               </h3>
+              {provider.isPinned && (
+                <Pin className="h-4 w-4 text-primary" fill="currentColor" />
+              )}
               {provider.category === "third_party" &&
                 provider.meta?.isPartner && (
                   <span
@@ -208,11 +213,13 @@ export function ProviderCard({
           <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-all duration-200 translate-x-2 group-hover:translate-x-0 group-focus-within:translate-x-0">
             <ProviderActions
               isCurrent={isCurrent}
+              isPinned={provider.isPinned}
               onSwitch={() => onSwitch(provider)}
               onEdit={() => onEdit(provider)}
               onDuplicate={() => onDuplicate(provider)}
               onConfigureUsage={() => onConfigureUsage(provider)}
               onDelete={() => onDelete(provider)}
+              onTogglePin={onTogglePin ? () => onTogglePin(provider) : undefined}
             />
           </div>
         </div>

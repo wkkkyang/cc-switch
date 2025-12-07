@@ -627,6 +627,7 @@ pub fn run() {
             commands::set_app_config_dir_override,
             // provider sort order management
             commands::update_providers_sort_order,
+            commands::update_provider_pin_status,
             // theirs: config import/export and dialogs
             commands::export_config_to_file,
             commands::import_config_from_file,
