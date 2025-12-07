@@ -43,9 +43,8 @@ use std::sync::Mutex;
 const DB_BACKUP_RETAIN: usize = 10;
 
 /// 当前 Schema 版本号
-/// 每次修改表结构时递增，并在 schema.rs 中添加相应的迁移逻辑
-/// 注意：enabled_qwen 列已在 v0->v1 迁移中添加，无需单独版本
-pub(crate) const SCHEMA_VERSION: i32 = 3;
+/// 保持与官方版本一致，使用版本1以确保兼容性
+pub(crate) const SCHEMA_VERSION: i32 = 1;
 
 /// 安全地序列化 JSON，避免 unwrap panic
 pub(crate) fn to_json_string<T: Serialize>(value: &T) -> Result<String, AppError> {

@@ -31,7 +31,6 @@ impl Database {
                 icon_color TEXT,
                 meta TEXT NOT NULL DEFAULT '{}',
                 is_current BOOLEAN NOT NULL DEFAULT 0,
-                is_pinned BOOLEAN NOT NULL DEFAULT 0,
                 PRIMARY KEY (id, app_type)
             )",
             [],
@@ -65,7 +64,6 @@ impl Database {
                 enabled_claude BOOLEAN NOT NULL DEFAULT 0,
                 enabled_codex BOOLEAN NOT NULL DEFAULT 0,
                 enabled_gemini BOOLEAN NOT NULL DEFAULT 0,
-                enabled_grok BOOLEAN NOT NULL DEFAULT 0,
                 enabled_qwen BOOLEAN NOT NULL DEFAULT 0
             )",
             [],
@@ -139,31 +137,22 @@ impl Database {
 
         let mut version = Self::get_user_version(conn)?;
 
+        // 保持与官方版本兼容性：如果数据库版本高于当前SCHEMA_VERSION，不报错也不降级
+        // 只在版本低于当前SCHEMA_VERSION时才进行迁移
         if version > SCHEMA_VERSION {
-            conn.execute("ROLLBACK TO schema_migration;", []).ok();
-            conn.execute("RELEASE schema_migration;", []).ok();
-            return Err(AppError::Database(format!(
-                "数据库版本过新（{version}），当前应用仅支持 {SCHEMA_VERSION}，请升级应用后再尝试。"
-            )));
+            log::info!("检测到数据库版本({version})高于当前应用支持的版本({SCHEMA_VERSION})，保持兼容性模式运行");
+            conn.execute("RELEASE schema_migration;", [])
+                .map_err(|e| AppError::Database(format!("提交迁移 savepoint 失败: {e}")))?;
+            return Ok(());
         }
 
         let result = (|| {
             while version < SCHEMA_VERSION {
                 match version {
                     0 => {
-                        log::info!("检测到 user_version=0，迁移到 1（补齐缺失列并设置版本）");
+                        log::info!("检测到 user_version=0，迁移到 1（保持与官方版本兼容）");
                         Self::migrate_v0_to_v1(conn)?;
                         Self::set_user_version(conn, 1)?;
-                    }
-                    1 => {
-                        log::info!("检测到 user_version=1，迁移到 2（添加 Grok MCP 列）");
-                        Self::migrate_v1_to_v2(conn)?;
-                        Self::set_user_version(conn, 2)?;
-                    }
-                    2 => {
-                        log::info!("检测到 user_version=2，迁移到 3（添加供应商置顶功能）");
-                        Self::migrate_v2_to_v3(conn)?;
-                        Self::set_user_version(conn, 3)?;
                     }
                     _ => {
                         return Err(AppError::Database(format!(
