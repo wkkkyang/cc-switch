@@ -7,6 +7,7 @@ import {
   Settings,
   ArrowLeft,
   FolderOpen,
+  Filter,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -30,6 +31,14 @@ import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
 import UsageScriptModal from "@/components/UsageScriptModal";
 import { DeepLinkImportDialog } from "@/components/DeepLinkImportDialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type View = "providers" | "settings";
 
@@ -37,7 +46,10 @@ function App() {
   const { t } = useTranslation();
 
   const [activeApp, setActiveApp] = useState<AppId>("claude");
+  // 当前视图
   const [currentView, setCurrentView] = useState<View>("providers");
+  // 供应商筛选
+  const [selectedProviderName, setSelectedProviderName] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
@@ -52,6 +64,28 @@ function App() {
   const { data, isLoading, refetch } = useProvidersQuery(activeApp);
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
+    
+  // 唯一的供应商名称列表
+  const uniqueProviderNames = useMemo(() => {
+    // 使用Set来获取唯一的供应商名称
+    const namesSet = new Set<string>();
+    Object.values(providers).forEach(provider => {
+      namesSet.add(provider.name);
+    });
+    // 转换为数组并排序
+    return Array.from(namesSet).sort();
+  }, [providers]);
+  
+  // 过滤后的供应商列表
+  const filteredProviders = useMemo(() => {
+    if (!selectedProviderName) return providers;
+    
+    return Object.fromEntries(
+      Object.entries(providers).filter(([_, provider]) => 
+        provider.name === selectedProviderName
+      )
+    );
+  }, [providers, selectedProviderName]);
 
   // 🎯 使用 useProviderActions Hook 统一管理所有 Provider 操作
   const {
@@ -280,11 +314,39 @@ function App() {
       default:
         return (
           <div className="mx-auto max-w-[56rem] px-5 flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
+            {/* 筛选按钮 */}
+            <div className="pt-4 pb-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40">
+                    <Filter className="mr-2 h-4 w-4" />
+                    {selectedProviderName 
+                      ? `${selectedProviderName}` 
+                      : "筛选"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-w-md">
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSelectedProviderName(null)}>
+                    {t("provider.allProviders", { defaultValue: "全部供应商" })}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {uniqueProviderNames.map((name) => (
+                    <DropdownMenuItem
+                      key={name}
+                      onClick={() => setSelectedProviderName(name)}
+                    >
+                      {name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             {/* 独立滚动容器 - 解决 Linux/Ubuntu 下 DndContext 与滚轮事件冲突 */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
               <div className="space-y-4">
                 <ProviderList
-                  providers={providers}
+                  providers={filteredProviders}
                   currentProviderId={currentProviderId}
                   appId={activeApp}
                   isLoading={isLoading}
