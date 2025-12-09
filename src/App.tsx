@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   FolderOpen,
   Filter,
+  Target,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -52,6 +53,7 @@ function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
+  const providerListRef = useRef<HTMLDivElement>(null);
   const [usageProvider, setUsageProvider] = useState<Provider | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Provider | null>(null);
   const [envConflicts, setEnvConflicts] = useState<EnvConflict[]>([]);
@@ -63,24 +65,24 @@ function App() {
   const { data, isLoading, refetch } = useProvidersQuery(activeApp);
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
-    
+
   // 唯一的供应商名称列表
   const uniqueProviderNames = useMemo(() => {
     // 使用Set来获取唯一的供应商名称
     const namesSet = new Set<string>();
-    Object.values(providers).forEach(provider => {
+    Object.values(providers).forEach((provider) => {
       namesSet.add(provider.name);
     });
     // 转换为数组并排序
     return Array.from(namesSet).sort();
   }, [providers]);
-  
+
   // 过滤后的供应商列表
   const filteredProviders = useMemo(() => {
     if (!selectedProviderName) return providers;
-    
+
     return Object.fromEntries(
-      Object.entries(providers).filter(([_, provider]) => 
+      Object.entries(providers).filter(([_, provider]) =>
         provider.name === selectedProviderName
       )
     );
@@ -300,6 +302,27 @@ function App() {
     }
   };
 
+  const scrollToCurrentProvider = useCallback(() => {
+    if (!providerListRef.current) return;
+
+    const currentProviderElement = providerListRef.current.querySelector(
+      '.provider-card[data-current="true"]'
+    ) as HTMLElement | null;
+
+    if (currentProviderElement) {
+      currentProviderElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // 添加闪烁效果
+      currentProviderElement.classList.add("animate-pulse");
+      setTimeout(() => {
+        currentProviderElement.classList.remove("animate-pulse");
+      }, 2000);
+    }
+  }, []);
+
   const renderContent = () => {
     switch (currentView) {
       case "settings":
@@ -313,14 +336,14 @@ function App() {
       default:
         return (
           <div className="mx-auto max-w-[56rem] px-5 flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
-            {/* 筛选按钮 */}
-            <div className="pt-4 pb-2">
+            {/* 筛选按钮和定位按钮 */}
+            <div className="pt-4 pb-2 flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40">
                     <Filter className="mr-2 h-4 w-4" />
-                    {selectedProviderName 
-                      ? `${selectedProviderName}` 
+                    {selectedProviderName
+                      ? `${selectedProviderName}`
                       : "筛选"}
                   </Button>
                 </DropdownMenuTrigger>
@@ -340,9 +363,21 @@ function App() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              {/* 定位当前供应商按钮 */}
+              <Button
+                onClick={scrollToCurrentProvider}
+                title={t("provider.locateCurrent", { defaultValue: "定位当前供应商" })}
+                className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40 h-9 w-9 p-0 flex items-center justify-center"
+              >
+                <Target className="h-4 w-4" />
+              </Button>
             </div>
             {/* 独立滚动容器 - 解决 Linux/Ubuntu 下 DndContext 与滚轮事件冲突 */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
+            <div
+              ref={providerListRef}
+              className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1"
+            >
               <div className="space-y-4">
                 <ProviderList
                   providers={filteredProviders}
@@ -466,7 +501,6 @@ function App() {
                 >
                   <FolderOpen className="h-4 w-4" />
                 </Button>
-
                 <Button
                   onClick={() => setIsAddOpen(true)}
                   size="icon"

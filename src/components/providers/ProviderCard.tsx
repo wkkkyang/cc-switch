@@ -115,10 +115,11 @@ export function ProviderCard({
 
   return (
     <div
+      data-current={isCurrent}
       className={cn(
-        "glass-card relative overflow-hidden rounded-xl p-4 transition-all duration-300",
+        "provider-card glass-card relative overflow-hidden rounded-xl p-4 transition-all duration-300",
         "group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] hover:border-primary/50",
-        isCurrent ? "glass-card-active" : "hover:scale-[1.01]",
+        isCurrent ? "glass-card-active border-2 border-primary" : "hover:scale-[1.01]",
         dragHandleProps?.isDragging &&
           "cursor-grabbing border-primary shadow-lg scale-105 z-10",
       )}
