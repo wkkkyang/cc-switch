@@ -127,7 +127,7 @@ export const GeminiConfigSection: React.FC<GeminiConfigSectionProps> = ({
           className="block text-sm font-medium text-gray-900 dark:text-gray-100"
         >
           {t("geminiConfig.configJson", {
-            defaultValue: "配置文件 (config.json)",
+            defaultValue: "配置文件 (settings.json)",
           })}
         </label>
 

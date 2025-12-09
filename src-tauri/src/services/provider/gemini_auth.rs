@@ -41,21 +41,16 @@ pub(crate) fn detect_gemini_auth_type(provider: &Provider) -> GeminiAuthType {
         .as_ref()
         .and_then(|meta| meta.partner_promotion_key.as_deref())
     {
-        if key.eq_ignore_ascii_case(GOOGLE_OFFICIAL_PARTNER_KEY) {
-            return GeminiAuthType::GoogleOfficial;
-        }
         if key.eq_ignore_ascii_case(PACKYCODE_PARTNER_KEY) {
             return GeminiAuthType::Packycode;
         }
+        // Google Official now uses API Key mode, treat as Generic
+        if key.eq_ignore_ascii_case(GOOGLE_OFFICIAL_PARTNER_KEY) {
+            return GeminiAuthType::Generic;
+        }
     }
 
-    // Priority 2: Check Google Official (name matching)
-    let name_lower = provider.name.to_ascii_lowercase();
-    if name_lower == "google" || name_lower.starts_with("google ") {
-        return GeminiAuthType::GoogleOfficial;
-    }
-
-    // Priority 3: Check PackyCode keywords
+    // Priority 2: Check PackyCode keywords
     if contains_packycode_keyword(&provider.name) {
         return GeminiAuthType::Packycode;
     }

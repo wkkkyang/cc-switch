@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Info } from "lucide-react";
 import EndpointSpeedTest from "./EndpointSpeedTest";
 import { ApiKeySection, EndpointField } from "./shared";
 import type { ProviderCategory } from "@/types";
@@ -12,6 +12,7 @@ interface EndpointCandidate {
 
 interface GeminiFormFieldsProps {
   providerId?: string;
+  isEditMode?: boolean;
   // API Key
   shouldShowApiKey: boolean;
   apiKey: string;
@@ -35,12 +36,27 @@ interface GeminiFormFieldsProps {
   model: string;
   onModelChange: (value: string) => void;
 
+  // Max Output Tokens
+  maxOutputTokens: string;
+  onMaxOutputTokensChange: (value: string) => void;
+
+  // Proxy settings (only for official)
+  proxyHost: string;
+  proxyPort: string;
+  onProxyHostChange: (value: string) => void;
+  onProxyPortChange: (value: string) => void;
+
+  // TLS verification (only for official)
+  tlsRejectUnauthorized: boolean;
+  onTlsRejectUnauthorizedChange: (value: boolean) => void;
+
   // Speed Test Endpoints
   speedTestEndpoints: EndpointCandidate[];
 }
 
 export function GeminiFormFields({
   providerId,
+  isEditMode = false,
   shouldShowApiKey,
   apiKey,
   onApiKeyChange,
@@ -58,49 +74,36 @@ export function GeminiFormFields({
   shouldShowModelField,
   model,
   onModelChange,
+  maxOutputTokens,
+  onMaxOutputTokensChange,
+  proxyHost,
+  proxyPort,
+  onProxyHostChange,
+  onProxyPortChange,
+  tlsRejectUnauthorized,
+  onTlsRejectUnauthorizedChange,
   speedTestEndpoints,
 }: GeminiFormFieldsProps) {
   const { t } = useTranslation();
 
-  // 检测是否为 Google 官方（使用 OAuth）
-  const isGoogleOfficial =
-    partnerPromotionKey?.toLowerCase() === "google-official";
+  // 检查是否有代理设置
+  const hasProxySettings = !!proxyHost || !!proxyPort;
 
   return (
     <>
-      {/* Google OAuth 提示 */}
-      {isGoogleOfficial && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-          <div className="flex gap-3">
-            <Info className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {t("provider.form.gemini.oauthTitle", {
-                  defaultValue: "OAuth 认证模式",
-                })}
-              </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                {t("provider.form.gemini.oauthHint", {
-                  defaultValue:
-                    "Google 官方使用 OAuth 个人认证，无需填写 API Key。首次使用时会自动打开浏览器进行登录。",
-                })}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* API Key 输入框 */}
-      {shouldShowApiKey && !isGoogleOfficial && (
-        <ApiKeySection
-          value={apiKey}
-          onChange={onApiKeyChange}
-          category={category}
-          shouldShowLink={shouldShowApiKeyLink}
-          websiteUrl={websiteUrl}
-          isPartner={isPartner}
-          partnerPromotionKey={partnerPromotionKey}
-        />
+      {shouldShowApiKey && (
+          <ApiKeySection
+            value={apiKey}
+            onChange={onApiKeyChange}
+            category={category}
+            shouldShowLink={shouldShowApiKeyLink}
+            websiteUrl={websiteUrl}
+            isPartner={isPartner}
+            partnerPromotionKey={partnerPromotionKey}
+            // Gemini: 允许为官方供应商自定义 API Key（在新增与编辑中都可）
+            disabled={false}
+          />
       )}
 
       {/* Base URL 输入框（统一使用与 Codex 相同的样式与交互） */}
@@ -117,18 +120,122 @@ export function GeminiFormFields({
         />
       )}
 
-      {/* Model 输入框 */}
+      {/* 模型和最大输出令牌数（官方供应商）或仅模型（非官方供应商） */}
       {shouldShowModelField && (
-        <div>
-          <FormLabel htmlFor="gemini-model">
-            {t("provider.form.gemini.model", { defaultValue: "模型" })}
-          </FormLabel>
-          <Input
-            id="gemini-model"
-            value={model}
-            onChange={(e) => onModelChange(e.target.value)}
-            placeholder="gemini-3-pro-preview"
-          />
+        <div className="grid grid-cols-1 gap-4">
+          {category === "official" ? (
+            // 官方供应商：模型和最大输出令牌数并排
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FormLabel htmlFor="gemini-model">
+                  {t("provider.form.gemini.model", { defaultValue: "模型" })}
+                </FormLabel>
+                <Input
+                  id="gemini-model"
+                  value={model || ''}
+                  onChange={(e) => {
+                    if (e.target.value !== model) {
+                      onModelChange(e.target.value);
+                    }
+                  }}
+                  placeholder="gemini-3-pro-preview"
+                />
+              </div>
+              <div>
+                <FormLabel htmlFor="gemini-max-tokens">
+                  {t("provider.form.gemini.maxOutputTokens", {
+                    defaultValue: "最大输出令牌数",
+                  })}
+                </FormLabel>
+                <Input
+                  id="gemini-max-tokens"
+                  type="text"
+                  value={maxOutputTokens}
+                  onChange={(e) => onMaxOutputTokensChange(e.target.value)}
+                  placeholder="2048"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          ) : (
+            // 非官方供应商：仅显示模型输入
+            <div>
+              <FormLabel htmlFor="gemini-model">
+                {t("provider.form.gemini.model", { defaultValue: "模型" })}
+              </FormLabel>
+              <Input
+                id="gemini-model"
+                value={model || ''}
+                onChange={(e) => {
+                  if (e.target.value !== model) {
+                    onModelChange(e.target.value);
+                  }
+                }}
+                placeholder="gemini-3-pro-preview"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 代理设置（仅官方供应商） */}
+      {category === "official" && (
+        <div className="space-y-4">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">
+              {t("provider.form.gemini.proxySettings", {
+                defaultValue: "代理设置",
+              })}
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FormLabel htmlFor="gemini-proxy-host">
+                  {t("provider.form.gemini.proxyHost", {
+                    defaultValue: "代理地址",
+                  })}
+                </FormLabel>
+                <Input
+                  id="gemini-proxy-host"
+                  value={proxyHost}
+                  onChange={(e) => onProxyHostChange(e.target.value)}
+                  placeholder="127.0.0.1"
+                />
+              </div>
+              <div>
+                <FormLabel htmlFor="gemini-proxy-port">
+                  {t("provider.form.gemini.proxyPort", {
+                    defaultValue: "代理端口",
+                  })}
+                </FormLabel>
+                <div className="flex gap-2">
+                  <Input
+                    id="gemini-proxy-port"
+                    type="number"
+                    value={proxyPort}
+                    onChange={(e) => onProxyPortChange(e.target.value)}
+                    placeholder="7890"
+                    className="flex-1"
+                  />
+                  {/* TLS 验证开关 */}
+                  <div className="flex items-center gap-2 ml-2">
+                    <input
+                      type="checkbox"
+                      id="gemini-tls-verify"
+                      checked={tlsRejectUnauthorized}
+                      onChange={(e) => onTlsRejectUnauthorizedChange(e.target.checked)}
+                      className="w-4 h-4 text-blue-500 bg-white dark:bg-gray-800 border-border-default rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-2"
+                    />
+                    <FormLabel htmlFor="gemini-tls-verify" className="mb-0 whitespace-nowrap">
+                      {t("provider.form.gemini.tlsVerify", {
+                        defaultValue: "TLS 验证",
+                      })}
+                    </FormLabel>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

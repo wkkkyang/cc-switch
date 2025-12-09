@@ -379,11 +379,19 @@ export function ProviderForm({
     geminiApiKey,
     geminiBaseUrl,
     geminiModel,
+    geminiMaxOutputTokens,
+    geminiProxyHost,
+    geminiProxyPort,
+    geminiTlsRejectUnauthorized,
     envError,
     configError: geminiConfigError,
     handleGeminiApiKeyChange: originalHandleGeminiApiKeyChange,
     handleGeminiBaseUrlChange: originalHandleGeminiBaseUrlChange,
     handleGeminiModelChange: originalHandleGeminiModelChange,
+    handleGeminiMaxOutputTokensChange: originalHandleGeminiMaxOutputTokensChange,
+    handleGeminiProxyHostChange,
+    handleGeminiProxyPortChange,
+    handleGeminiTlsRejectUnauthorizedChange,
     handleGeminiEnvChange,
     handleGeminiConfigChange,
     resetGeminiConfig,
@@ -392,53 +400,64 @@ export function ProviderForm({
     initialData: appId === "gemini" ? initialData : undefined,
   });
 
+  // 同步 Gemini env 和 config 到 settingsConfig
+  useEffect(() => {
+    if (appId !== "gemini") return;
+
+    try {
+      const envObj = envStringToObj(geminiEnv);
+      const configObj = geminiConfig.trim() ? JSON.parse(geminiConfig) : {};
+      const combined = {
+        env: envObj,
+        config: configObj,
+      };
+      form.setValue("settingsConfig", JSON.stringify(combined, null, 2));
+    } catch {
+      // ignore parse errors
+    }
+  }, [appId, geminiEnv, geminiConfig, envStringToObj, form]);
+
+  // 初始化 Gemini env 和 config（当预设被选择时）
+  useEffect(() => {
+    if (appId !== "gemini" || !selectedPresetId || selectedPresetId === "custom" || isEditMode) return;
+
+    try {
+      const config = JSON.parse(form.watch("settingsConfig") || "{}");
+      if (config.env || config.config) {
+        resetGeminiConfig(config.env || {}, config.config || {});
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [appId, selectedPresetId, isEditMode, form, resetGeminiConfig]);
+
   // 包装 Gemini handlers 以同步 settingsConfig
   const handleGeminiApiKeyChange = useCallback(
     (key: string) => {
       originalHandleGeminiApiKeyChange(key);
-      // 同步更新 settingsConfig
-      try {
-        const config = JSON.parse(form.watch("settingsConfig") || "{}");
-        if (!config.env) config.env = {};
-        config.env.GEMINI_API_KEY = key.trim();
-        form.setValue("settingsConfig", JSON.stringify(config, null, 2));
-      } catch {
-        // ignore
-      }
     },
-    [originalHandleGeminiApiKeyChange, form],
+    [originalHandleGeminiApiKeyChange],
   );
 
   const handleGeminiBaseUrlChange = useCallback(
     (url: string) => {
       originalHandleGeminiBaseUrlChange(url);
-      // 同步更新 settingsConfig
-      try {
-        const config = JSON.parse(form.watch("settingsConfig") || "{}");
-        if (!config.env) config.env = {};
-        config.env.GOOGLE_GEMINI_BASE_URL = url.trim().replace(/\/+$/, "");
-        form.setValue("settingsConfig", JSON.stringify(config, null, 2));
-      } catch {
-        // ignore
-      }
     },
-    [originalHandleGeminiBaseUrlChange, form],
+    [originalHandleGeminiBaseUrlChange],
   );
 
   const handleGeminiModelChange = useCallback(
     (model: string) => {
       originalHandleGeminiModelChange(model);
-      // 同步更新 settingsConfig
-      try {
-        const config = JSON.parse(form.watch("settingsConfig") || "{}");
-        if (!config.env) config.env = {};
-        config.env.GEMINI_MODEL = model.trim();
-        form.setValue("settingsConfig", JSON.stringify(config, null, 2));
-      } catch {
-        // ignore
-      }
     },
-    [originalHandleGeminiModelChange, form],
+    [originalHandleGeminiModelChange],
+  );
+
+  const handleGeminiMaxOutputTokensChange = useCallback(
+    (tokens: string) => {
+      originalHandleGeminiMaxOutputTokensChange(tokens);
+    },
+    [originalHandleGeminiMaxOutputTokensChange],
   );
 
   // 使用 Gemini 通用配置 hook (仅 Gemini 模式)
@@ -1092,10 +1111,7 @@ export function ProviderForm({
         {appId === "gemini" && (
           <GeminiFormFields
             providerId={providerId}
-            shouldShowApiKey={shouldShowApiKey(
-              form.watch("settingsConfig"),
-              isEditMode,
-            )}
+            shouldShowApiKey={true}
             apiKey={geminiApiKey}
             onApiKeyChange={handleGeminiApiKeyChange}
             category={category}
@@ -1112,7 +1128,18 @@ export function ProviderForm({
             shouldShowModelField={true}
             model={geminiModel}
             onModelChange={handleGeminiModelChange}
+            maxOutputTokens={geminiMaxOutputTokens}
+            onMaxOutputTokensChange={handleGeminiMaxOutputTokensChange}
+            proxyHost={geminiProxyHost}
+            proxyPort={geminiProxyPort}
+            onProxyHostChange={handleGeminiProxyHostChange}
+            onProxyPortChange={handleGeminiProxyPortChange}
+            tlsRejectUnauthorized={geminiTlsRejectUnauthorized}
+            onTlsRejectUnauthorizedChange={
+              handleGeminiTlsRejectUnauthorizedChange
+            }
             speedTestEndpoints={speedTestEndpoints}
+            isEditMode={isEditMode}
           />
         )}
 

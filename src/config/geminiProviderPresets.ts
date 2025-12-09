@@ -36,9 +36,30 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
     websiteUrl: "https://ai.google.dev/",
     apiKeyUrl: "https://aistudio.google.com/apikey",
     settingsConfig: {
-      env: {},
+      env: {
+        GEMINI_API_KEY: "",
+        NODE_TLS_REJECT_UNAUTHORIZED: "0",
+        https_proxy: "http://127.0.0.1:7890",
+        http_proxy: "http://127.0.0.1:7890",
+      },
+      config: {
+        general: {
+          previewFeatures: true,
+        },
+        security: {
+          auth: {
+            selectedType: "gemini-api-key",
+          },
+        },
+        ui: {
+          hideWindowTitle: false,
+        },
+        model: "gemini-3-pro-preview",
+        maxOutputTokens: 2048,
+      },
     },
-    description: "Google 官方 Gemini API (OAuth)",
+    model: "gemini-3-pro-preview",
+    description: "Google 官方 Gemini API",
     category: "official",
     partnerPromotionKey: "google-official",
     theme: {

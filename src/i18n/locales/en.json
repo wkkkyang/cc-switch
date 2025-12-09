@@ -364,7 +364,7 @@
   "geminiConfig": {
     "envFile": "Environment Variables (.env)",
     "envFileHint": "Configure Gemini environment variables in .env format",
-    "configJson": "Configuration File (config.json)",
+    "configJson": "Configuration File (settings.json)",
     "configJsonHint": "Configure Gemini extended parameters in JSON format (optional)",
     "writeCommonConfig": "Write Common Config",
     "editCommonConfig": "Edit Common Config",
