@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Filter,
   Target,
+  Check,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -65,6 +66,12 @@ function App() {
   const { data, isLoading, refetch } = useProvidersQuery(activeApp);
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
+
+  // 获取当前激活的供应商名称
+  const currentProviderName = useMemo(() => {
+    if (!currentProviderId || !providers[currentProviderId]) return '';
+    return providers[currentProviderId].name;
+  }, [currentProviderId, providers]);
 
   // 唯一的供应商名称列表
   const uniqueProviderNames = useMemo(() => {
@@ -347,20 +354,33 @@ function App() {
                       : "筛选"}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="max-w-md">
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setSelectedProviderName(null)}>
+                <DropdownMenuContent align="start" className="w-64 p-2">
+                  <DropdownMenuItem 
+                    onClick={() => setSelectedProviderName(null)}
+                    className={`justify-center py-1.5 mb-2 text-sm ${!selectedProviderName ? 'bg-accent' : ''} border border-gray-300 dark:border-gray-500`}
+                  >
                     {t("provider.allProviders", { defaultValue: "全部供应商" })}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {uniqueProviderNames.map((name) => (
-                    <DropdownMenuItem
-                      key={name}
-                      onClick={() => setSelectedProviderName(name)}
-                    >
-                      {name}
-                    </DropdownMenuItem>
-                  ))}
+                  <DropdownMenuSeparator className="mb-2" />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {uniqueProviderNames.map((name) => {
+                      const isSelected = selectedProviderName === name;
+                      const isCurrent = name === currentProviderName;
+                      return (
+                        <DropdownMenuItem
+                          key={name}
+                          onClick={() => setSelectedProviderName(name)}
+                          className={`min-h-[40px] flex items-center justify-center p-1.5 rounded border border-gray-300 dark:border-gray-500 text-sm ${
+                            isSelected ? 'bg-accent' : ''
+                          } ${
+                            isCurrent ? 'text-orange-500 dark:text-orange-400 font-medium hover:!text-orange-500 dark:hover:!text-orange-400' : ''
+                          }`}
+                        >
+                          <span className="text-center">{name}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               
