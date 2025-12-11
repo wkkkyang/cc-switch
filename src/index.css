@@ -3,27 +3,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add smooth pulse animation for the current provider card */
-@keyframes pulse-highlight {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+/* 流光高亮边框动画（当前供应商） */
+@keyframes provider-border-glow {
+  0% {
+    background-position: 0% 0%;
   }
-  50% {
-    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+  100% {
+    background-position: 400% 0%;
   }
 }
 
-/* Apply the pulse animation to the current provider card */
-.provider-card.animate-pulse {
-  animation: pulse-highlight 1.5s ease-in-out infinite;
-  z-index: 10;
-  position: relative;
-}
+/* 只在当前供应商外侧包一层细的霓虹流光边框 */
+.provider-card-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.9rem; /* 略大于内部 rounded-xl */
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.15),
+    rgba(59, 130, 246, 0.9),
+    rgba(96, 165, 250, 0.4),
+    rgba(59, 130, 246, 0.9),
+    rgba(59, 130, 246, 0.15)
+  );
+  background-size: 400% 100%;
+  animation: provider-border-glow 6s linear infinite;
+  pointer-events: none;
 
-/* Ensure the pulse effect is visible on the current provider card */
-.provider-card[data-current="true"] {
-  border-color: rgb(99, 102, 241);
-  transition: border-color 0.3s ease;
+  /* 只保留边框细线，内部透明 */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 /* shadcn/ui 主题变量 - 蓝色主题 */

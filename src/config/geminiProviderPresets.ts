@@ -54,11 +54,10 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
         ui: {
           hideWindowTitle: false,
         },
-        model: "gemini-3-pro-preview",
-        maxOutputTokens: 2048,
+        model: "gemini-2.5-flash-lite",
       },
     },
-    model: "gemini-3-pro-preview",
+    model: "gemini-2.5-flash-lite",
     description: "Google 官方 Gemini API",
     category: "official",
     partnerPromotionKey: "google-official",

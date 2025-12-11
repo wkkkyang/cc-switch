@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import EndpointSpeedTest from "./EndpointSpeedTest";
 import { ApiKeySection, EndpointField } from "./shared";
 import type { ProviderCategory } from "@/types";
@@ -50,6 +50,12 @@ interface GeminiFormFieldsProps {
   tlsRejectUnauthorized: boolean;
   onTlsRejectUnauthorizedChange: (value: boolean) => void;
 
+  // Proxy env toggle (only for Google Official)
+  showProxyEnvToggle?: boolean;
+  proxyEnvEnabled?: boolean;
+  onProxyEnvToggle?: (enabled: boolean) => void;
+  proxyEnvLoading?: boolean;
+
   // Speed Test Endpoints
   speedTestEndpoints: EndpointCandidate[];
 }
@@ -83,6 +89,10 @@ export function GeminiFormFields({
   tlsRejectUnauthorized,
   onTlsRejectUnauthorizedChange,
   speedTestEndpoints,
+  showProxyEnvToggle,
+  proxyEnvEnabled,
+  onProxyEnvToggle,
+  proxyEnvLoading,
 }: GeminiFormFieldsProps) {
   const { t } = useTranslation();
 
@@ -101,6 +111,14 @@ export function GeminiFormFields({
             websiteUrl={websiteUrl}
             isPartner={isPartner}
             partnerPromotionKey={partnerPromotionKey}
+            placeholder={{
+              official: t("provider.form.gemini.apiKeyPlaceholder", {
+                defaultValue: "输入 Gemini API Key，将自动填充到配置",
+              }),
+              thirdParty: t("provider.form.gemini.apiKeyPlaceholder", {
+                defaultValue: "输入 Gemini API Key，将自动填充到配置",
+              }),
+            }}
             // Gemini: 允许为官方供应商自定义 API Key（在新增与编辑中都可）
             disabled={false}
           />
@@ -138,7 +156,7 @@ export function GeminiFormFields({
                       onModelChange(e.target.value);
                     }
                   }}
-                  placeholder="gemini-3-pro-preview"
+                  placeholder="gemini-2.5-flash-lite"
                 />
               </div>
               <div>
@@ -152,7 +170,6 @@ export function GeminiFormFields({
                   type="text"
                   value={maxOutputTokens}
                   onChange={(e) => onMaxOutputTokensChange(e.target.value)}
-                  placeholder="2048"
                   className="w-full"
                 />
               </div>
@@ -187,7 +204,7 @@ export function GeminiFormFields({
                 defaultValue: "代理设置",
               })}
             </h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <FormLabel htmlFor="gemini-proxy-host">
@@ -208,7 +225,7 @@ export function GeminiFormFields({
                     defaultValue: "代理端口",
                   })}
                 </FormLabel>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <Input
                     id="gemini-proxy-port"
                     type="number"
@@ -231,6 +248,25 @@ export function GeminiFormFields({
                         defaultValue: "TLS 验证",
                       })}
                     </FormLabel>
+                    {showProxyEnvToggle && (
+                      <div className="flex items-center gap-1 ml-1">
+                        <span className="px-1 text-sm select-none">
+                          {t("provider.form.gemini.proxyEnvToggle", {
+                            defaultValue: "代理开关",
+                          })}
+                        </span>
+                        <Switch
+                          id="gemini-proxy-toggle"
+                          checked={!!proxyEnvEnabled}
+                          disabled={proxyEnvLoading}
+                          onCheckedChange={(checked) => {
+                            if (onProxyEnvToggle) {
+                              onProxyEnvToggle(!!checked);
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -644,6 +644,8 @@ pub fn run() {
             commands::check_env_conflicts,
             commands::delete_env_vars,
             commands::restore_env_backup,
+            commands::get_gemini_proxy_status,
+            commands::set_gemini_proxy_enabled,
             // Skill management
             commands::get_skills,
             commands::install_skill,

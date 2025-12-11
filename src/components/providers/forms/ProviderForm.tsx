@@ -56,6 +56,7 @@ import {
   useGeminiConfigState,
   useGeminiCommonConfig,
 } from "./hooks";
+import { geminiApi } from "@/lib/api/gemini";
 
 const CLAUDE_DEFAULT_CONFIG = JSON.stringify({ env: {} }, null, 2);
 const CODEX_DEFAULT_CONFIG = JSON.stringify({ auth: {}, config: "" }, null, 2);
@@ -64,7 +65,7 @@ const GEMINI_DEFAULT_CONFIG = JSON.stringify(
     env: {
       GOOGLE_GEMINI_BASE_URL: "",
       GEMINI_API_KEY: "",
-      GEMINI_MODEL: "gemini-3-pro-preview",
+      GEMINI_MODEL: "gemini-2.5-flash-lite",
     },
   },
   null,
@@ -396,9 +397,12 @@ export function ProviderForm({
     handleGeminiConfigChange,
     resetGeminiConfig,
     envStringToObj,
+    envObjToString,
   } = useGeminiConfigState({
     initialData: appId === "gemini" ? initialData : undefined,
   });
+  const [geminiProxyEnvEnabled, setGeminiProxyEnvEnabled] = useState(true);
+  const [geminiProxyEnvLoading, setGeminiProxyEnvLoading] = useState(false);
 
   // 同步 Gemini env 和 config 到 settingsConfig
   useEffect(() => {
@@ -775,6 +779,121 @@ export function ProviderForm({
     initialData,
   });
 
+  const isGoogleOfficialGemini = useMemo(() => {
+    if (appId !== "gemini") return false;
+
+    // 编辑模式：优先根据 meta 标记和名称判断
+    if (initialData) {
+      if (initialData.meta?.partnerPromotionKey === "google-official") {
+        return true;
+      }
+      // 部分场景下 meta 可能未包含 partnerPromotionKey，这里兜底按名称识别
+      if (initialData.name === "Google Official") {
+        return true;
+      }
+    }
+
+    // 新建模式：根据当前选择的预设判断
+    if (!initialData && selectedPresetId && selectedPresetId !== "custom") {
+      const entry = presetEntries.find((item) => item.id === selectedPresetId);
+      if (entry && "name" in entry.preset) {
+        const presetName = (entry.preset as GeminiProviderPreset).name;
+        const partnerKey = (entry.preset as GeminiProviderPreset)
+          .partnerPromotionKey;
+        if (
+          presetName === "Google Official" ||
+          partnerKey === "google-official"
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }, [appId, initialData, selectedPresetId, presetEntries]);
+
+  useEffect(() => {
+    if (!isGoogleOfficialGemini) {
+      return;
+    }
+
+    let cancelled = false;
+    setGeminiProxyEnvLoading(true);
+
+    (async () => {
+      try {
+        const status = await geminiApi.getProxyStatus();
+        if (cancelled) return;
+        setGeminiProxyEnvEnabled(
+          typeof status.enabled === "boolean" ? status.enabled : true,
+        );
+
+        // 同步 .env 编辑器内容为实际 ~/.gemini/.env 文件内容
+        if (typeof status.content === "string" && status.content.trim()) {
+          handleGeminiEnvChange(status.content);
+        }
+      } catch {
+        if (cancelled) return;
+      } finally {
+        if (!cancelled) {
+          setGeminiProxyEnvLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isGoogleOfficialGemini, handleGeminiEnvChange]);
+
+  const handleGeminiProxyEnvToggle = useCallback(
+    async (enabled: boolean) => {
+      if (!isGoogleOfficialGemini) return;
+
+      setGeminiProxyEnvLoading(true);
+      try {
+        const status = await geminiApi.setProxyEnabled(
+          enabled,
+          geminiProxyHost || undefined,
+          geminiProxyPort || undefined,
+        );
+        setGeminiProxyEnvEnabled(status.enabled);
+        if (typeof status.content === "string") {
+          // 仅合并 http_proxy / https_proxy，保持当前供应商的其他 env 配置不变
+          const currentEnvObj = envStringToObj(geminiEnv);
+          const fileEnvObj = envStringToObj(status.content);
+
+          if (enabled) {
+            if (fileEnvObj.http_proxy) {
+              currentEnvObj.http_proxy = fileEnvObj.http_proxy;
+            }
+            if (fileEnvObj.https_proxy) {
+              currentEnvObj.https_proxy = fileEnvObj.https_proxy;
+            }
+          } else {
+            delete currentEnvObj.http_proxy;
+            delete currentEnvObj.https_proxy;
+          }
+
+          const mergedEnv = envObjToString(currentEnvObj);
+          handleGeminiEnvChange(mergedEnv);
+        }
+      } catch {
+      } finally {
+        setGeminiProxyEnvLoading(false);
+      }
+    },
+    [
+      isGoogleOfficialGemini,
+      handleGeminiEnvChange,
+      geminiProxyHost,
+      geminiProxyPort,
+      envStringToObj,
+      envObjToString,
+      geminiEnv,
+    ],
+  );
+
   const handlePresetChange = (value: string) => {
     setSelectedPresetId(value);
     if (value === "custom") {
@@ -1140,6 +1259,10 @@ export function ProviderForm({
             }
             speedTestEndpoints={speedTestEndpoints}
             isEditMode={isEditMode}
+            showProxyEnvToggle={isGoogleOfficialGemini}
+            proxyEnvEnabled={geminiProxyEnvEnabled}
+            onProxyEnvToggle={handleGeminiProxyEnvToggle}
+            proxyEnvLoading={geminiProxyEnvLoading}
           />
         )}
 

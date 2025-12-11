@@ -87,8 +87,21 @@ export function useGeminiConfigState({
   useEffect(() => {
     if (!initialData) return;
 
-    const config = initialData.settingsConfig;
-    if (typeof config === "object" && config !== null) {
+    const rawConfig = initialData.settingsConfig as any;
+
+    // 兼容两种情况：settingsConfig 可能是对象，也可能是 JSON 字符串
+    let config: any = null;
+    if (typeof rawConfig === "string") {
+      try {
+        config = JSON.parse(rawConfig);
+      } catch {
+        config = null;
+      }
+    } else if (typeof rawConfig === "object" && rawConfig !== null) {
+      config = rawConfig;
+    }
+
+    if (config && typeof config === "object") {
       // 设置 env
       const env = (config as any).env || {};
       setGeminiEnvState(envObjToString(env));
@@ -117,7 +130,7 @@ export function useGeminiConfigState({
       }
 
       // 从 env 中提取代理设置
-      const httpsProxy = env.https_proxy || env.HTTPS_PROXY || "";
+      const httpsProxy = (env as any).https_proxy || (env as any).HTTPS_PROXY || "";
       if (typeof httpsProxy === "string" && httpsProxy) {
         const match = httpsProxy.match(/^https?:\/\/([^:]+):(\d+)/);
         if (match) {
@@ -127,7 +140,7 @@ export function useGeminiConfigState({
       }
 
       // 从 env 中提取 TLS 验证设置
-      const tlsValue = env.NODE_TLS_REJECT_UNAUTHORIZED;
+      const tlsValue = (env as any).NODE_TLS_REJECT_UNAUTHORIZED;
       if (typeof tlsValue === "string") {
         setGeminiTlsRejectUnauthorized(tlsValue === "1");
       }
@@ -226,14 +239,8 @@ export function useGeminiConfigState({
       // 同步到 config
       try {
         const configObj = geminiConfig ? JSON.parse(geminiConfig) : {};
-        if (trimmed === "") {
-          // 如果清空模型，从配置中移除该字段
-          if (Object.prototype.hasOwnProperty.call(configObj, "model")) {
-            delete configObj.model;
-          }
-        } else {
-          configObj.model = trimmed;
-        }
+        // 始终保留 model 字段；为空时写入空字符串
+        configObj.model = trimmed;
         setGeminiConfig(JSON.stringify(configObj, null, 2));
       } catch {
         // 如果 config 解析失败，忽略
@@ -358,11 +365,8 @@ export function useGeminiConfigState({
       setGeminiTlsRejectUnauthorized(enabled);
 
       const envObj = envStringToObj(geminiEnv);
-      if (enabled) {
-        envObj.NODE_TLS_REJECT_UNAUTHORIZED = "1";
-      } else {
-        delete envObj.NODE_TLS_REJECT_UNAUTHORIZED;
-      }
+      // 始终保留该变量，用 1 / 0 控制开关
+      envObj.NODE_TLS_REJECT_UNAUTHORIZED = enabled ? "1" : "0";
       const newEnv = envObjToString(envObj);
       setGeminiEnv(newEnv);
     },
