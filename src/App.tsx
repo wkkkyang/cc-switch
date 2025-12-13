@@ -205,6 +205,11 @@ function App() {
     checkEnvOnSwitch();
   }, [activeApp]);
 
+  // 切换应用时重置筛选器
+  useEffect(() => {
+    setSelectedProviderName(null);
+  }, [activeApp]);
+
   // 打开网站链接
   const handleOpenWebsite = async (url: string) => {
     try {
