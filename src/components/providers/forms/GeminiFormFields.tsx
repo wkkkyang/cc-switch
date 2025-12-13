@@ -62,7 +62,6 @@ interface GeminiFormFieldsProps {
 
 export function GeminiFormFields({
   providerId,
-  isEditMode = false,
   shouldShowApiKey,
   apiKey,
   onApiKeyChange,
@@ -95,9 +94,6 @@ export function GeminiFormFields({
   proxyEnvLoading,
 }: GeminiFormFieldsProps) {
   const { t } = useTranslation();
-
-  // 检查是否有代理设置
-  const hasProxySettings = !!proxyHost || !!proxyPort;
 
   return (
     <>

@@ -40,6 +40,12 @@ pub struct Provider {
     #[serde(rename = "isPinned")]
     #[serde(default)]
     pub is_pinned: bool,
+    /// 是否为复制的供应商
+    #[serde(rename = "isDuplicated", skip_serializing_if = "Option::is_none")]
+    pub is_duplicated: Option<bool>,
+    /// 是否已编辑（用于复制后编辑状态的标记）
+    #[serde(rename = "isEditedAfterDuplication", skip_serializing_if = "Option::is_none")]
+    pub is_edited_after_duplication: Option<bool>,
 }
 
 impl Provider {
@@ -63,6 +69,8 @@ impl Provider {
             icon: None,
             icon_color: None,
             is_pinned: false,
+            is_duplicated: None,
+            is_edited_after_duplication: None,
         }
     }
 }

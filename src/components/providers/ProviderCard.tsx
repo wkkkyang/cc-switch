@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GripVertical, Pin } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   DraggableAttributes,
@@ -113,6 +113,9 @@ export function ProviderCard({
     onOpenWebsite(displayUrl);
   };
 
+  // 判断是否显示复制标签和蓝色名称
+  const shouldShowDuplicatedMark = provider.isDuplicated && !provider.isEditedAfterDuplication;
+
   return (
     <div className="relative">
       {isCurrent && <div className="provider-card-glow" />}
@@ -155,12 +158,14 @@ export function ProviderCard({
 
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2 min-h-[20px]">
-                <h3 className="text-base font-semibold leading-none">
+                <h3 className={cn(
+                  "text-base font-semibold leading-none",
+                  shouldShowDuplicatedMark && "text-blue-500 dark:text-blue-400"
+                )}>
                   {provider.name}
                 </h3>
-                {provider.isPinned && (
-                  <Pin className="h-4 w-4 text-primary" fill="currentColor" />
-                )}
+                
+                {/* 官方合作伙伴标记 */}
                 {provider.category === "third_party" &&
                   provider.meta?.isPartner && (
                     <span
@@ -172,16 +177,31 @@ export function ProviderCard({
                       ⭐
                     </span>
                   )}
-                <span
-                  className={cn(
-                    "rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-500 dark:text-green-400 transition-opacity duration-200",
-                    isCurrent ? "opacity-100" : "opacity-0 pointer-events-none",
-                  )}
-                >
-                  {t("provider.currentlyUsing")}
-                </span>
+                
+                {/* 当前使用标签 */}
+                {isCurrent && (
+                  <span
+                    className={cn(
+                      "rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-500 dark:text-green-400 transition-opacity duration-200",
+                    )}
+                  >
+                    {t("provider.inUse")}
+                  </span>
+                )}
+                
+                {/* 复制标签 */}
+                {shouldShowDuplicatedMark && (
+                  <span
+                    className={cn(
+                      "rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-500 dark:text-blue-400 transition-opacity duration-200",
+                    )}
+                  >
+                    {t("provider.duplicate", { defaultValue: "复制" })}
+                  </span>
+                )}
               </div>
-
+              
+              {/* API地址显示 */}
               {displayUrl && (
                 <button
                   type="button"

@@ -245,6 +245,9 @@ fn dry_run_validates_schema_compatibility() {
             meta: None,
             icon: None,
             icon_color: None,
+            is_pinned: false,
+            is_duplicated: None,
+            is_edited_after_duplication: None,
         },
     );
 

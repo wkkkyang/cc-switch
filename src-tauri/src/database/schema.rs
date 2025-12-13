@@ -15,7 +15,7 @@ impl Database {
 
     /// 在指定连接上创建表（供迁移和测试使用）
     pub(crate) fn create_tables_on_conn(conn: &Connection) -> Result<(), AppError> {
-        // 1. Providers 表
+        // 1. Providers 表 (v1版本，不包含新字段)
         conn.execute(
             "CREATE TABLE IF NOT EXISTS providers (
                 id TEXT NOT NULL,
@@ -154,6 +154,7 @@ impl Database {
                         Self::migrate_v0_to_v1(conn)?;
                         Self::set_user_version(conn, 1)?;
                     }
+                    // 不执行从v1到v2的迁移，因为我们保持v1版本
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -245,13 +246,19 @@ impl Database {
         Ok(())
     }
 
-    /// v1 -> v2 迁移：添加 enabled_grok 列
+    /// v1 -> v2 迁移：添加供应商复制功能字段
     fn migrate_v1_to_v2(conn: &Connection) -> Result<(), AppError> {
         Self::add_column_if_missing(
             conn,
-            "mcp_servers",
-            "enabled_grok",
-            "BOOLEAN NOT NULL DEFAULT 0",
+            "providers",
+            "is_duplicated",
+            "BOOLEAN",
+        )?;
+        Self::add_column_if_missing(
+            conn,
+            "providers",
+            "is_edited_after_duplication",
+            "BOOLEAN",
         )?;
         Ok(())
     }

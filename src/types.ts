@@ -25,11 +25,11 @@ export interface Provider {
   iconColor?: string; // 图标颜色（Hex 格式，如 "#00A67E"）
   // 是否置顶
   isPinned?: boolean;
-}
-
-export interface AppConfig {
-  providers: Record<string, Provider>;
-  current: string;
+  // 是否为复制的供应商
+  isDuplicated?: boolean;
+  // 是否已编辑（用于复制后编辑状态的标记）
+  isEditedAfterDuplication?: boolean;
+  current?: string;
 }
 
 // 自定义端点配置

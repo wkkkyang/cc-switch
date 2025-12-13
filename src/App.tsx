@@ -9,7 +9,6 @@ import {
   FolderOpen,
   Filter,
   Target,
-  Check,
 } from "lucide-react";
 import type { Provider } from "@/types";
 import type { EnvConflict } from "@/types/env";
@@ -240,6 +239,10 @@ function App() {
 
   // 编辑供应商
   const handleEditProvider = async (provider: Provider) => {
+    // 如果是复制的供应商且尚未标记为已编辑，则标记为已编辑
+    if (provider.isDuplicated && !provider.isEditedAfterDuplication) {
+      provider.isEditedAfterDuplication = true;
+    }
     await updateProvider(provider);
     setEditingProvider(null);
   };
@@ -257,8 +260,9 @@ function App() {
     const newSortIndex =
       provider.sortIndex !== undefined ? provider.sortIndex + 1 : undefined;
 
-    const duplicatedProvider: Omit<Provider, "id" | "createdAt"> = {
-      name: `${provider.name} copy`,
+    const duplicatedProvider: Provider = {
+      id: `${provider.id}-copy-${Date.now()}`, // 确保ID唯一
+      name: provider.name, // 保持原名称，不加copy后缀
       settingsConfig: JSON.parse(JSON.stringify(provider.settingsConfig)), // 深拷贝
       websiteUrl: provider.websiteUrl,
       category: provider.category,
@@ -268,6 +272,10 @@ function App() {
         : undefined, // 深拷贝
       icon: provider.icon,
       iconColor: provider.iconColor,
+      isPinned: provider.isPinned,
+      isDuplicated: true, // 标记为复制的供应商
+      isEditedAfterDuplication: false, // 初始状态为未编辑
+      current: provider.current,
     };
 
     // 2️⃣ 如果原供应商有 sortIndex，需要将后续所有供应商的 sortIndex +1

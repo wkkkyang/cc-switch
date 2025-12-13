@@ -150,6 +150,8 @@ pub(crate) fn build_provider_from_request(
         icon: request.icon.clone(),
         icon_color: None,
         is_pinned: false,
+        is_duplicated: None,
+        is_edited_after_duplication: None,
     };
 
     Ok(provider)

@@ -29,6 +29,9 @@ mod migration;
 mod schema;
 
 #[cfg(test)]
+mod test_v1_version;
+
+#[cfg(test)]
 mod tests;
 
 use crate::config::get_app_config_dir;

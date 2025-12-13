@@ -16,11 +16,22 @@ impl Database {
         app_type: &str,
     ) -> Result<IndexMap<String, Provider>, AppError> {
         let conn = lock_conn!(self.conn);
-        let mut stmt = conn.prepare(
+        
+        // 检查是否存在新字段，以支持 v1 数据库
+        let has_duplicated_fields = conn.prepare("SELECT is_duplicated FROM providers LIMIT 1").is_ok();
+        
+        let sql = if has_duplicated_fields {
+            "SELECT id, name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, is_pinned, is_duplicated, is_edited_after_duplication
+             FROM providers WHERE app_type = ?1
+             ORDER BY is_pinned DESC, COALESCE(sort_index, 999999), created_at ASC, id ASC"
+        } else {
             "SELECT id, name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, is_pinned
              FROM providers WHERE app_type = ?1
              ORDER BY is_pinned DESC, COALESCE(sort_index, 999999), created_at ASC, id ASC"
-        ).map_err(|e| AppError::Database(e.to_string()))?;
+        };
+        
+        let mut stmt = conn.prepare(sql)
+            .map_err(|e| AppError::Database(e.to_string()))?;
 
         let provider_iter = stmt
             .query_map(params![app_type], |row| {
@@ -36,6 +47,15 @@ impl Database {
                 let icon_color: Option<String> = row.get(9)?;
                 let meta_str: String = row.get(10)?;
                 let is_pinned: bool = row.get(11)?;
+                
+                // 根据是否有这些字段来获取值
+                let (is_duplicated, is_edited_after_duplication) = if has_duplicated_fields {
+                    let is_dup: Option<bool> = row.get(12)?;
+                    let is_edited: Option<bool> = row.get(13)?;
+                    (is_dup, is_edited)
+                } else {
+                    (None, None)
+                };
 
                 let settings_config =
                     serde_json::from_str(&settings_config_str).unwrap_or(serde_json::Value::Null);
@@ -56,6 +76,8 @@ impl Database {
                         icon,
                         icon_color,
                         is_pinned,
+                        is_duplicated,
+                        is_edited_after_duplication,
                     },
                 ))
             })
@@ -146,69 +168,142 @@ impl Database {
             )
             .ok();
 
+        // 检查是否存在新字段，以支持 v1 数据库
+        let has_duplicated_fields = tx.prepare("SELECT is_duplicated FROM providers LIMIT 1").is_ok();
+
         let is_update = existing.is_some();
         let is_current = existing.unwrap_or(false);
 
         if is_update {
             // 更新模式：使用 UPDATE 避免触发 ON DELETE CASCADE
-            tx.execute(
-                "UPDATE providers SET
-                    name = ?1,
-                    settings_config = ?2,
-                    website_url = ?3,
-                    category = ?4,
-                    created_at = ?5,
-                    sort_index = ?6,
-                    notes = ?7,
-                    icon = ?8,
-                    icon_color = ?9,
-                    meta = ?10,
-                    is_current = ?11,
-                    is_pinned = ?12
-                WHERE id = ?13 AND app_type = ?14",
-                params![
-                    provider.name,
-                    serde_json::to_string(&provider.settings_config).unwrap(),
-                    provider.website_url,
-                    provider.category,
-                    provider.created_at,
-                    provider.sort_index,
-                    provider.notes,
-                    provider.icon,
-                    provider.icon_color,
-                    serde_json::to_string(&meta_clone).unwrap(),
-                    is_current,
-                    provider.is_pinned,
-                    provider.id,
-                    app_type,
-                ],
-            )
-            .map_err(|e| AppError::Database(e.to_string()))?;
+            if has_duplicated_fields {
+                tx.execute(
+                    "UPDATE providers SET
+                        name = ?1,
+                        settings_config = ?2,
+                        website_url = ?3,
+                        category = ?4,
+                        created_at = ?5,
+                        sort_index = ?6,
+                        notes = ?7,
+                        icon = ?8,
+                        icon_color = ?9,
+                        meta = ?10,
+                        is_current = ?11,
+                        is_pinned = ?12,
+                        is_duplicated = ?13,
+                        is_edited_after_duplication = ?14
+                    WHERE id = ?15 AND app_type = ?16",
+                    params![
+                        provider.name,
+                        serde_json::to_string(&provider.settings_config).unwrap(),
+                        provider.website_url,
+                        provider.category,
+                        provider.created_at,
+                        provider.sort_index,
+                        provider.notes,
+                        provider.icon,
+                        provider.icon_color,
+                        serde_json::to_string(&meta_clone).unwrap(),
+                        is_current,
+                        provider.is_pinned,
+                        provider.is_duplicated,
+                        provider.is_edited_after_duplication,
+                        provider.id,
+                        app_type,
+                    ],
+                )
+                .map_err(|e| AppError::Database(e.to_string()))?;
+            } else {
+                // v1 数据库，不包含新字段
+                tx.execute(
+                    "UPDATE providers SET
+                        name = ?1,
+                        settings_config = ?2,
+                        website_url = ?3,
+                        category = ?4,
+                        created_at = ?5,
+                        sort_index = ?6,
+                        notes = ?7,
+                        icon = ?8,
+                        icon_color = ?9,
+                        meta = ?10,
+                        is_current = ?11,
+                        is_pinned = ?12
+                    WHERE id = ?13 AND app_type = ?14",
+                    params![
+                        provider.name,
+                        serde_json::to_string(&provider.settings_config).unwrap(),
+                        provider.website_url,
+                        provider.category,
+                        provider.created_at,
+                        provider.sort_index,
+                        provider.notes,
+                        provider.icon,
+                        provider.icon_color,
+                        serde_json::to_string(&meta_clone).unwrap(),
+                        is_current,
+                        provider.is_pinned,
+                        provider.id,
+                        app_type,
+                    ],
+                )
+                .map_err(|e| AppError::Database(e.to_string()))?;
+            }
         } else {
             // 新增模式：使用 INSERT
-            tx.execute(
-                "INSERT INTO providers (
-                    id, app_type, name, settings_config, website_url, category,
-                    created_at, sort_index, notes, icon, icon_color, meta, is_current, is_pinned
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
-                params![
-                    provider.id,
-                    app_type,
-                    provider.name,
-                    serde_json::to_string(&provider.settings_config).unwrap(),
-                    provider.website_url,
-                    provider.category,
-                    provider.created_at,
-                    provider.sort_index,
-                    provider.notes,
-                    provider.icon,
-                    provider.icon_color,
-                    serde_json::to_string(&meta_clone).unwrap(),
-                    is_current,
-                    provider.is_pinned,
-                ],
-            )
-            .map_err(|e| AppError::Database(e.to_string()))?;
+            if has_duplicated_fields {
+                tx.execute(
+                    "INSERT INTO providers (
+                        id, app_type, name, settings_config, website_url, category,
+                        created_at, sort_index, notes, icon, icon_color, meta, is_current, is_pinned, is_duplicated, is_edited_after_duplication
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+                    params![
+                        provider.id,
+                        app_type,
+                        provider.name,
+                        serde_json::to_string(&provider.settings_config).unwrap(),
+                        provider.website_url,
+                        provider.category,
+                        provider.created_at,
+                        provider.sort_index,
+                        provider.notes,
+                        provider.icon,
+                        provider.icon_color,
+                        serde_json::to_string(&meta_clone).unwrap(),
+                        is_current,
+                        provider.is_pinned,
+                        provider.is_duplicated,
+                        provider.is_edited_after_duplication,
+                    ],
+                )
+                .map_err(|e| AppError::Database(e.to_string()))?;
+            } else {
+                // v1 数据库，不包含新字段
+                tx.execute(
+                    "INSERT INTO providers (
+                        id, app_type, name, settings_config, website_url, category,
+                        created_at, sort_index, notes, icon, icon_color, meta, is_current, is_pinned
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                    params![
+                        provider.id,
+                        app_type,
+                        provider.name,
+                        serde_json::to_string(&provider.settings_config).unwrap(),
+                        provider.website_url,
+                        provider.category,
+                        provider.created_at,
+                        provider.sort_index,
+                        provider.notes,
+                        provider.icon,
+                        provider.icon_color,
+                        serde_json::to_string(&meta_clone).unwrap(),
+                        is_current,
+                        provider.is_pinned,
+                    ],
+                )
+                .map_err(|e| AppError::Database(e.to_string()))?;
+            }
 
             // 只有新增时才同步 endpoints
             for (url, endpoint) in endpoints {
