@@ -2,7 +2,7 @@
 //!
 //! 负责系统托盘图标和菜单的创建、更新和事件处理。
 
-use tauri::menu::{CheckMenuItem, Menu, MenuBuilder, MenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuBuilder, MenuItem, Submenu, SubmenuBuilder};
 use tauri::{Emitter, Manager};
 
 use crate::app_config::AppType;
@@ -56,7 +56,7 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
         prefix: "claude_",
         header_id: "claude_header",
         empty_id: "claude_empty",
-        header_label: "─── Claude ───",
+        header_label: "Claude",
         log_name: "Claude",
     },
     TrayAppSection {
@@ -64,7 +64,7 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
         prefix: "codex_",
         header_id: "codex_header",
         empty_id: "codex_empty",
-        header_label: "─── Codex ───",
+        header_label: "Codex",
         log_name: "Codex",
     },
     TrayAppSection {
@@ -72,7 +72,7 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
         prefix: "gemini_",
         header_id: "gemini_header",
         empty_id: "gemini_empty",
-        header_label: "─── Gemini ───",
+        header_label: "Gemini",
         log_name: "Gemini",
     },
     TrayAppSection {
@@ -80,7 +80,7 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
         prefix: "grok_",
         header_id: "grok_header",
         empty_id: "grok_empty",
-        header_label: "─── Grok ───",
+        header_label: "Grok",
         log_name: "Grok",
     },
     TrayAppSection {
@@ -88,32 +88,34 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
         prefix: "qwen_",
         header_id: "qwen_header",
         empty_id: "qwen_empty",
-        header_label: "─── Qwen ───",
+        header_label: "Qwen",
         log_name: "Qwen",
     },
 ];
 
-/// 添加供应商分区到菜单
-fn append_provider_section<'a>(
+/// 创建供应商子菜单
+fn create_provider_submenu<'a>(
     app: &'a tauri::AppHandle,
-    mut menu_builder: MenuBuilder<'a, tauri::Wry, tauri::AppHandle<tauri::Wry>>,
     manager: Option<&crate::provider::ProviderManager>,
     section: &TrayAppSection,
     tray_texts: &TrayTexts,
-) -> Result<MenuBuilder<'a, tauri::Wry, tauri::AppHandle<tauri::Wry>>, AppError> {
-    let Some(manager) = manager else {
-        return Ok(menu_builder);
-    };
+) -> Result<Submenu<tauri::Wry>, AppError> {
+    let mut submenu_builder = SubmenuBuilder::new(app, section.header_label);
 
-    let header = MenuItem::with_id(
-        app,
-        section.header_id,
-        section.header_label,
-        false,
-        None::<&str>,
-    )
-    .map_err(|e| AppError::Message(format!("创建{}标题失败: {e}", section.log_name)))?;
-    menu_builder = menu_builder.item(&header);
+    let Some(manager) = manager else {
+        let empty_hint = MenuItem::with_id(
+            app,
+            section.empty_id,
+            tray_texts.no_provider_hint,
+            false,
+            None::<&str>,
+        )
+        .map_err(|e| AppError::Message(format!("创建{}空提示失败: {e}", section.log_name)))?;
+        return submenu_builder
+            .item(&empty_hint)
+            .build()
+            .map_err(|e| AppError::Message(format!("构建{}子菜单失败: {e}", section.log_name)));
+    };
 
     if manager.providers.is_empty() {
         let empty_hint = MenuItem::with_id(
@@ -124,7 +126,10 @@ fn append_provider_section<'a>(
             None::<&str>,
         )
         .map_err(|e| AppError::Message(format!("创建{}空提示失败: {e}", section.log_name)))?;
-        return Ok(menu_builder.item(&empty_hint));
+        return submenu_builder
+            .item(&empty_hint)
+            .build()
+            .map_err(|e| AppError::Message(format!("构建{}子菜单失败: {e}", section.log_name)));
     }
 
     let mut sorted_providers: Vec<_> = manager.providers.iter().collect();
@@ -157,10 +162,12 @@ fn append_provider_section<'a>(
             None::<&str>,
         )
         .map_err(|e| AppError::Message(format!("创建{}菜单项失败: {e}", section.log_name)))?;
-        menu_builder = menu_builder.item(&item);
+        submenu_builder = submenu_builder.item(&item);
     }
 
-    Ok(menu_builder)
+    submenu_builder
+        .build()
+        .map_err(|e| AppError::Message(format!("构建{}子菜单失败: {e}", section.log_name)))
 }
 
 /// 处理供应商托盘事件
@@ -198,7 +205,7 @@ pub fn create_tray_menu(
             .map_err(|e| AppError::Message(format!("创建打开主界面菜单失败: {e}")))?;
     menu_builder = menu_builder.item(&show_main_item).separator();
 
-    // 直接添加所有供应商到主菜单（扁平化结构，更简单可靠）
+    // 为每个应用创建子菜单
     for section in TRAY_SECTIONS.iter() {
         let app_type_str = section.app_type.as_str();
         let providers = app_state.db.get_all_providers(app_type_str)?;
@@ -213,8 +220,8 @@ pub fn create_tray_menu(
             current: current_id,
         };
 
-        menu_builder =
-            append_provider_section(app, menu_builder, Some(&manager), section, &tray_texts)?;
+        let submenu = create_provider_submenu(app, Some(&manager), section, &tray_texts)?;
+        menu_builder = menu_builder.item(&submenu);
     }
 
     // 分隔符和退出菜单
