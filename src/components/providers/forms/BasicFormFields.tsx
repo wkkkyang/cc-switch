@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   FormControl,
   FormField,
@@ -9,16 +9,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { ArrowLeft } from "lucide-react";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { IconPicker } from "@/components/IconPicker";
 import { getIconMetadata } from "@/icons/extracted/metadata";
+import { UncontrolledCandidateModelsManager } from "./UncontrolledCandidateModelsManager";
 import type { UseFormReturn } from "react-hook-form";
 import type { ProviderFormData } from "@/lib/schemas/provider";
 
@@ -36,6 +37,18 @@ export function BasicFormFields({ form }: BasicFormFieldsProps) {
   const effectiveIconColor =
     currentIconColor ||
     (currentIcon ? getIconMetadata(currentIcon)?.defaultColor : undefined);
+
+  // 使用 watch 监听待选模型列表，确保实时更新
+  const currentCandidateModels = form.watch("meta.candidateModels") || [];
+
+  // 更新待选模型列表
+  const updateCandidateModels = useCallback((models: string[]) => {
+    form.setValue("meta.candidateModels", models, {
+      shouldValidate: false,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  }, [form]);
 
   const handleIconSelect = (icon: string) => {
     const meta = getIconMetadata(icon);
@@ -138,19 +151,31 @@ export function BasicFormFields({ form }: BasicFormFieldsProps) {
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="websiteUrl"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t("provider.websiteUrl")}</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="https://" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* 网站链接和待选模型并排放置 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="websiteUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("provider.websiteUrl")}</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="https://" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormItem>
+          <FormLabel>待选模型</FormLabel>
+          <UncontrolledCandidateModelsManager
+            candidateModels={currentCandidateModels}
+            onChange={updateCandidateModels}
+          />
+          <FormMessage />
+        </FormItem>
+      </div>
     </>
   );
 }

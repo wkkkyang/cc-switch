@@ -103,16 +103,22 @@ fn migration_sets_user_version_when_missing() {
 }
 
 #[test]
-fn migration_rejects_future_version() {
+fn migration_allows_future_version_in_compatibility_mode() {
     let conn = Connection::open_in_memory().expect("open memory db");
     Database::create_tables_on_conn(&conn).expect("create tables");
-    Database::set_user_version(&conn, SCHEMA_VERSION + 1).expect("set future version");
 
-    let err =
-        Database::apply_schema_migrations_on_conn(&conn).expect_err("should reject higher version");
-    assert!(
-        err.to_string().contains("数据库版本过新"),
-        "unexpected error: {err}"
+    // 设置一个未来的版本（比当前版本高）
+    let future_version = SCHEMA_VERSION + 1;
+    Database::set_user_version(&conn, future_version).expect("set future version");
+
+    // 应该成功运行在兼容性模式下，不返回错误
+    Database::apply_schema_migrations_on_conn(&conn).expect("should allow higher version in compatibility mode");
+
+    // 验证版本没有被降级
+    assert_eq!(
+        Database::get_user_version(&conn).expect("read version after"),
+        future_version,
+        "version should remain unchanged in compatibility mode"
     );
 }
 

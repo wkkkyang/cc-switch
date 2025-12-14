@@ -80,11 +80,12 @@ impl Database {
                 let mut meta_clone = provider.meta.clone().unwrap_or_default();
                 let endpoints = std::mem::take(&mut meta_clone.custom_endpoints);
 
+                // v1版本：只插入基础字段
                 tx.execute(
                     "INSERT OR REPLACE INTO providers (
                         id, app_type, name, settings_config, website_url, category,
-                        created_at, sort_index, notes, icon, icon_color, meta, is_current, is_pinned, is_duplicated, is_edited_after_duplication
-                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+                        created_at, sort_index, notes, icon, icon_color, meta, is_current
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                     params![
                         id,
                         app_type,
@@ -99,9 +100,6 @@ impl Database {
                         provider.icon_color,
                         to_json_string(&meta_clone)?,
                         is_current,
-                        provider.is_pinned,
-                        provider.is_duplicated,
-                        provider.is_edited_after_duplication,
                     ],
                 )
                 .map_err(|e| AppError::Database(format!("Migrate provider failed: {e}")))?;

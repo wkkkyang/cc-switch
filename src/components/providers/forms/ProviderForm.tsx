@@ -194,6 +194,9 @@ export function ProviderForm({
                 : CLAUDE_DEFAULT_CONFIG,
       icon: initialData?.icon ?? "",
       iconColor: initialData?.iconColor ?? "",
+      meta: {
+        candidateModels: initialData?.meta?.candidateModels ?? [],
+      },
     }),
     [initialData, appId],
   );
@@ -671,9 +674,28 @@ export function ProviderForm({
         };
       }
 
-      if (mergedMeta !== undefined) {
-        payload.meta = mergedMeta;
+      // 添加待选模型
+      if (values.meta?.candidateModels && values.meta.candidateModels.length > 0) {
+        mergedMeta = {
+          ...(mergedMeta ?? {}),
+          candidateModels: values.meta.candidateModels,
+        };
       }
+
+      payload.meta = mergedMeta;
+    } else {
+      // 编辑模式或没有自定义端点时，直接处理meta字段
+      let mergedMeta = mergeProviderMeta(initialData?.meta, {});
+      
+      // 添加待选模型
+      if (values.meta?.candidateModels && values.meta.candidateModels.length > 0) {
+        mergedMeta = {
+          ...(mergedMeta ?? {}),
+          candidateModels: values.meta.candidateModels,
+        };
+      }
+      
+      payload.meta = mergedMeta;
     }
 
     onSubmit(payload);

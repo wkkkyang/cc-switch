@@ -164,6 +164,9 @@ pub struct ProviderMeta {
         skip_serializing_if = "Option::is_none"
     )]
     pub partner_promotion_key: Option<String>,
+    /// 待选模型列表
+    #[serde(rename = "candidateModels", skip_serializing_if = "Option::is_none")]
+    pub candidate_models: Option<Vec<String>>,
 }
 
 impl ProviderManager {

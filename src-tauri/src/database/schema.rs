@@ -150,11 +150,11 @@ impl Database {
             while version < SCHEMA_VERSION {
                 match version {
                     0 => {
-                        log::info!("检测到 user_version=0，迁移到 1（保持与官方版本兼容）");
+                        log::info!("数据库迁移：v0 -> v1（添加基础字段）");
                         Self::migrate_v0_to_v1(conn)?;
                         Self::set_user_version(conn, 1)?;
                     }
-                    // 不执行从v1到v2的迁移，因为我们保持v1版本
+                    // 保持v1版本，不执行进一步迁移
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
