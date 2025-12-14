@@ -1,7 +1,7 @@
 use crate::config::write_json_file;
 use crate::error::AppError;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 
@@ -112,97 +112,6 @@ pub fn write_qwen_settings(settings: &QwenSettings) -> Result<(), AppError> {
             .permissions();
         perms.set_mode(0o600);
         fs::set_permissions(&path, perms).map_err(|e| AppError::io(&path, e))?;
-    }
-
-    Ok(())
-}
-
-/// 从 Provider.settings_config (JSON Value) 提取 Qwen 配置
-pub fn json_to_qwen_settings(settings: &Value) -> Result<QwenSettings, AppError> {
-    let mut qwen_settings = QwenSettings::default();
-
-    // 新格式: security.auth 和 model.name
-    // 这些字段在 Provider 的 settings_config 中，不需要特别提取到 QwenSettings
-
-    // 提取 sessionTokenLimit
-    if let Some(limit) = settings.get("sessionTokenLimit").and_then(|v| v.as_u64()) {
-        qwen_settings.session_token_limit = Some(limit as u32);
-    }
-
-    // 提取 experimental 配置
-    if let Some(exp_obj) = settings.get("experimental").and_then(|v| v.as_object()) {
-        let mut exp_settings = ExperimentalSettings {
-            vlm_switch_mode: None,
-            vision_model_preview: None,
-        };
-
-        // 提取 vlmSwitchMode
-        if let Some(mode) = exp_obj.get("vlmSwitchMode").and_then(|v| v.as_str()) {
-            exp_settings.vlm_switch_mode = Some(mode.to_string());
-        }
-
-        // 提取 visionModelPreview
-        if let Some(preview) = exp_obj.get("visionModelPreview").and_then(|v| v.as_bool()) {
-            exp_settings.vision_model_preview = Some(preview);
-        }
-
-        qwen_settings.experimental = Some(exp_settings);
-    }
-
-    Ok(qwen_settings)
-}
-
-/// 将 Qwen 配置转换为 Provider.settings_config (JSON Value)
-pub fn qwen_settings_to_json(settings: &QwenSettings) -> Value {
-    let mut json_map = Map::new();
-
-    // 添加 sessionTokenLimit
-    if let Some(limit) = settings.session_token_limit {
-        json_map.insert("sessionTokenLimit".to_string(), Value::Number(limit.into()));
-    }
-
-    // 添加 experimental 配置
-    if let Some(exp) = &settings.experimental {
-        let mut exp_map = Map::new();
-
-        if let Some(mode) = &exp.vlm_switch_mode {
-            exp_map.insert("vlmSwitchMode".to_string(), Value::String(mode.clone()));
-        }
-
-        if let Some(preview) = exp.vision_model_preview {
-            exp_map.insert("visionModelPreview".to_string(), Value::Bool(preview));
-        }
-
-        if !exp_map.is_empty() {
-            json_map.insert("experimental".to_string(), Value::Object(exp_map));
-        }
-    }
-
-    Value::Object(json_map)
-}
-
-/// 验证 Qwen 配置的基本结构
-pub fn validate_qwen_settings(settings: &Value) -> Result<(), AppError> {
-    // 验证 sessionTokenLimit 是数字类型（如果存在）
-    if let Some(session_limit) = settings.get("sessionTokenLimit") {
-        if !session_limit.is_number() {
-            return Err(AppError::localized(
-                "qwen.validation.invalid_session_limit",
-                "Qwen 配置格式错误: sessionTokenLimit 必须是数字",
-                "Qwen config invalid: sessionTokenLimit must be a number",
-            ));
-        }
-    }
-
-    // 验证 experimental 是对象类型（如果存在）
-    if let Some(experimental) = settings.get("experimental") {
-        if !experimental.is_object() {
-            return Err(AppError::localized(
-                "qwen.validation.invalid_experimental",
-                "Qwen 配置格式错误: experimental 必须是对象",
-                "Qwen config invalid: experimental must be an object",
-            ));
-        }
     }
 
     Ok(())

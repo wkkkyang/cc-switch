@@ -44,7 +44,6 @@ impl TrayTexts {
 pub struct TrayAppSection {
     pub app_type: AppType,
     pub prefix: &'static str,
-    pub header_id: &'static str,
     pub empty_id: &'static str,
     pub header_label: &'static str,
     pub log_name: &'static str,
@@ -54,7 +53,6 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Claude,
         prefix: "claude_",
-        header_id: "claude_header",
         empty_id: "claude_empty",
         header_label: "Claude",
         log_name: "Claude",
@@ -62,7 +60,6 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Codex,
         prefix: "codex_",
-        header_id: "codex_header",
         empty_id: "codex_empty",
         header_label: "Codex",
         log_name: "Codex",
@@ -70,7 +67,6 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Gemini,
         prefix: "gemini_",
-        header_id: "gemini_header",
         empty_id: "gemini_empty",
         header_label: "Gemini",
         log_name: "Gemini",
@@ -78,7 +74,6 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Grok,
         prefix: "grok_",
-        header_id: "grok_header",
         empty_id: "grok_empty",
         header_label: "Grok",
         log_name: "Grok",
@@ -86,7 +81,6 @@ pub const TRAY_SECTIONS: [TrayAppSection; 5] = [
     TrayAppSection {
         app_type: AppType::Qwen,
         prefix: "qwen_",
-        header_id: "qwen_header",
         empty_id: "qwen_empty",
         header_label: "Qwen",
         log_name: "Qwen",

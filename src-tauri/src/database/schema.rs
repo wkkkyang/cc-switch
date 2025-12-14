@@ -246,34 +246,6 @@ impl Database {
         Ok(())
     }
 
-    /// v1 -> v2 迁移：添加供应商复制功能字段
-    fn migrate_v1_to_v2(conn: &Connection) -> Result<(), AppError> {
-        Self::add_column_if_missing(
-            conn,
-            "providers",
-            "is_duplicated",
-            "BOOLEAN",
-        )?;
-        Self::add_column_if_missing(
-            conn,
-            "providers",
-            "is_edited_after_duplication",
-            "BOOLEAN",
-        )?;
-        Ok(())
-    }
-
-    /// v2 -> v3 迁移：添加供应商置顶功能
-    fn migrate_v2_to_v3(conn: &Connection) -> Result<(), AppError> {
-        Self::add_column_if_missing(
-            conn,
-            "providers",
-            "is_pinned",
-            "BOOLEAN NOT NULL DEFAULT 0",
-        )?;
-        Ok(())
-    }
-
     // --- 辅助方法 ---
 
     pub(crate) fn get_user_version(conn: &Connection) -> Result<i32, AppError> {

@@ -3,68 +3,10 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
-use crate::app_config::{McpApps, McpConfig, McpServer, MultiAppConfig};
+use crate::app_config::{McpApps, McpServer, MultiAppConfig};
 use crate::error::AppError;
 
-use super::validation::{extract_server_spec, validate_server_spec};
-
-/// 返回已启用的 MCP 服务器（过滤 enabled==true）
-fn collect_enabled_servers(cfg: &McpConfig) -> HashMap<String, Value> {
-    let mut out = HashMap::new();
-    for (id, entry) in cfg.servers.iter() {
-        let enabled = entry
-            .get("enabled")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-        if !enabled {
-            continue;
-        }
-        match extract_server_spec(entry) {
-            Ok(spec) => {
-                out.insert(id.clone(), spec);
-            }
-            Err(err) => {
-                log::warn!("跳过无效的 MCP 条目 '{id}': {err}");
-            }
-        }
-    }
-    out
-}
-
-/// 从统一结构中收集启用了 Grok 应用的 MCP 服务器（v3.7.0+）
-fn collect_grok_enabled_servers(config: &MultiAppConfig) -> HashMap<String, Value> {
-    let mut out = HashMap::new();
-    
-    // 优先使用统一结构（v3.7.0+）
-    if let Some(servers) = &config.mcp.servers {
-        for (id, server) in servers.iter() {
-            if server.apps.grok {
-                out.insert(id.clone(), server.server.clone());
-            }
-        }
-    } else {
-        // 回退到旧结构（向后兼容）
-        for (id, entry) in config.mcp.grok.servers.iter() {
-            let enabled = entry
-                .get("enabled")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-            if !enabled {
-                continue;
-            }
-            match extract_server_spec(entry) {
-                Ok(spec) => {
-                    out.insert(id.clone(), spec);
-                }
-                Err(err) => {
-                    log::warn!("跳过无效的 MCP 条目 '{id}': {err}");
-                }
-            }
-        }
-    }
-    
-    out
-}
+use super::validation::validate_server_spec;
 
 /// Sync enabled Grok app entries from config.json to Grok user-settings.json
 /// 注意：此函数已被禁用，因为 mcpServers 功能已被移除

@@ -16,6 +16,7 @@ import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { WindowSettings } from "@/components/settings/WindowSettings";
 import { DirectorySettings } from "@/components/settings/DirectorySettings";
 import { ImportExportSection } from "@/components/settings/ImportExportSection";
+import { UpdateSection } from "@/components/settings/UpdateSection";
 import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useTranslation } from "react-i18next";
@@ -160,12 +161,15 @@ export function SettingsPage({
           onValueChange={setActiveTab}
           className="flex flex-col h-full"
         >
-          <TabsList className="grid w-full grid-cols-2 mb-6 glass rounded-xl">
+          <TabsList className="grid w-full grid-cols-3 mb-6 glass rounded-xl">
             <TabsTrigger value="general">
               {t("settings.tabGeneral")}
             </TabsTrigger>
             <TabsTrigger value="advanced">
               {t("settings.tabAdvanced")}
+            </TabsTrigger>
+            <TabsTrigger value="about">
+              {t("settings.tabAbout", { defaultValue: "关于" })}
             </TabsTrigger>
           </TabsList>
 
@@ -236,6 +240,15 @@ export function SettingsPage({
                   </div>
                 </>
               ) : null}
+            </TabsContent>
+
+            <TabsContent value="about" className="space-y-6 mt-0 pb-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">
+                  {t("settings.about", { defaultValue: "关于应用" })}
+                </h3>
+                <UpdateSection />
+              </div>
             </TabsContent>
 
           </div>

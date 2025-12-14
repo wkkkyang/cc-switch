@@ -13,6 +13,7 @@ mod provider;
 mod qwen;
 mod settings;
 pub mod skill;
+mod update;
 
 pub use config::*;
 pub use deeplink::*;
@@ -27,3 +28,4 @@ pub use provider::*;
 pub use qwen::*;
 pub use settings::*;
 pub use skill::*;
+pub use update::*;

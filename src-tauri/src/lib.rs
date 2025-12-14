@@ -656,6 +656,10 @@ pub fn run() {
             // Auto launch
             commands::set_auto_launch,
             commands::get_auto_launch_status,
+            // Update management
+            commands::get_app_version,
+            commands::check_update,
+            commands::perform_update,
         ]);
 
     let app = builder
