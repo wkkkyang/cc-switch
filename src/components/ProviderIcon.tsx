@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { getIcon, hasIcon } from "@/icons/extracted";
 import { cn } from "@/lib/utils";
 
@@ -18,13 +18,73 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({
   className,
   showFallback = true,
 }) => {
-  // 获取图标 SVG
+  const [customIconData, setCustomIconData] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 检查是否为自定义图标
+  const isCustomIcon = useMemo(() => {
+    return icon && (icon.startsWith("custom://") || icon.startsWith("data:"));
+  }, [icon]);
+
+  // 加载自定义图标
+  useEffect(() => {
+    if (!isCustomIcon || !icon) {
+      setCustomIconData(null);
+      return;
+    }
+
+    const loadCustomIcon = async () => {
+      setIsLoading(true);
+      try {
+        if (icon.startsWith("data:")) {
+          // Data URL 直接使用
+          setCustomIconData(icon);
+        } else if (icon.startsWith("custom://")) {
+          // 自定义协议路径，需要通过 Tauri 命令读取
+          const fileName = icon.replace("custom://", "");
+          const { invoke } = await import('@tauri-apps/api/core');
+          
+          try {
+            const data = await invoke('read_custom_icon', { fileName });
+            
+            // 将二进制数据转换为 base64
+            const dataArray = data as number[];
+            const uint8Array = new Uint8Array(dataArray);
+            
+            // 使用浏览器原生 API 生成 base64
+            const base64 = btoa(
+              uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
+            );
+            
+            // 根据文件名后缀确定图片类型
+            const extension = fileName.split('.').pop()?.toLowerCase();
+            const mimeType = extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg' : 
+                           extension === 'gif' ? 'image/gif' : 'image/png';
+            const dataUrl = `data:${mimeType};base64,${base64}`;
+            setCustomIconData(dataUrl);
+          } catch (error) {
+            console.warn("Failed to load custom icon:", error);
+            setCustomIconData(null);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading custom icon:", error);
+        setCustomIconData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCustomIcon();
+  }, [isCustomIcon, icon]);
+
+  // 获取标准图标 SVG
   const iconSvg = useMemo(() => {
-    if (icon && hasIcon(icon)) {
+    if (!isCustomIcon && icon && hasIcon(icon)) {
       return getIcon(icon);
     }
     return "";
-  }, [icon]);
+  }, [icon, isCustomIcon]);
 
   // 计算尺寸样式
   const sizeStyle = useMemo(() => {
@@ -32,13 +92,36 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({
     return {
       width: sizeValue,
       height: sizeValue,
-      // 内嵌 SVG 使用 1em 作为尺寸基准，这里同步 fontSize 让图标实际跟随 size 放大
       fontSize: sizeValue,
       lineHeight: 1,
     };
   }, [size]);
 
-  // 如果有图标，显示图标
+  // 显示自定义图标
+  if (isCustomIcon && customIconData) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center justify-center flex-shrink-0",
+          className,
+        )}
+        style={sizeStyle}
+      >
+        <img 
+          src={customIconData} 
+          alt={name}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            objectFit: 'contain',
+            borderRadius: '4px'
+          }}
+        />
+      </span>
+    );
+  }
+
+  // 显示标准图标
   if (iconSvg) {
     return (
       <span

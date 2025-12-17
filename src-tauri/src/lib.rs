@@ -660,6 +660,10 @@ pub fn run() {
             commands::get_app_version,
             commands::check_update,
             commands::perform_update,
+            // Custom icon management
+            commands::save_custom_icon,
+            commands::read_custom_icon,
+            commands::delete_custom_icon,
         ]);
 
     let app = builder
