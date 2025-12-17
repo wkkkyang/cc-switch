@@ -84,11 +84,27 @@ export function useProviderActions(activeApp: AppId) {
       try {
         await switchProviderMutation.mutateAsync(provider.id);
         await syncClaudePlugin(provider);
+        
+        // 当切换到官方供应商时，显示提示（仅 Gemini）
+        if (
+          activeApp === "gemini" &&
+          provider.category === "official" &&
+          provider.name === "Google Official"
+        ) {
+          // 使用 setTimeout 确保切换成功后再显示提示
+          setTimeout(() => {
+            toast.info("注意修改代理端口哦", {
+              duration: 2000, // 2秒
+              description: "Gemini 官方供应商可能需要配置代理端口",
+              position: "bottom-right",
+            });
+          }, 100);
+        }
       } catch {
         // 错误提示由 mutation 与同步函数处理
       }
     },
-    [switchProviderMutation, syncClaudePlugin],
+    [switchProviderMutation, syncClaudePlugin, activeApp],
   );
 
   // 删除供应商

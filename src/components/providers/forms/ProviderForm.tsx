@@ -716,6 +716,36 @@ export function ProviderForm({
       payload.meta = mergedMeta;
     }
 
+    // 当使用或修改官方供应商时，显示提示（在提交前检查）
+    // 使用 setTimeout 确保我们的提示在成功提示之后显示，避免重叠
+    setTimeout(() => {
+      // 判断逻辑：检查预设类别或初始数据类别
+      const currentCategory = activePreset?.category || initialData?.category || category;
+      const isOfficial = currentCategory === "official";
+      
+      // 详细调试信息（在开发环境）
+      if (process.env.NODE_ENV === "development") {
+        console.log("Gemini 提示检查:", {
+          activePresetCategory: activePreset?.category,
+          initialDataCategory: initialData?.category,
+          hookCategory: category,
+          currentCategory,
+          isOfficial,
+          appId,
+          isEditMode,
+        });
+      }
+      
+      if (isOfficial && appId === "gemini") {
+        toast.info("注意修改代理端口哦", {
+          duration: 2000, // 2秒
+          description: "Gemini 官方供应商可能需要配置代理端口",
+          position: "bottom-right", // 避开重叠位置
+        });
+      }
+    }, 200); // 延迟到 onSubmit 完成之后
+    
+    // 调用保存操作
     onSubmit(payload);
   };
 
