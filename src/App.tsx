@@ -22,6 +22,7 @@ import {
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
 import { useProviderActions } from "@/hooks/useProviderActions";
 import { extractErrorMessage } from "@/utils/errorUtils";
+import { checkUpdate } from "@/lib/api/update";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
@@ -171,6 +172,51 @@ function App() {
     };
 
     checkMigration();
+  }, [t]);
+
+  // 应用启动时自动检测更新（仅在有新版本时提示）
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      try {
+        // 稍微延迟，避免影响应用启动性能
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const response = await checkUpdate();
+        
+        if (response.has_update) {
+          toast.info(`发现新版本: ${response.new_version}`, {
+            duration: 8000,
+            description: `当前版本: ${response.current_version} → 新版本: ${response.new_version}`,
+            action: {
+              label: "更新",
+              onClick: async () => {
+                try {
+                  const result = await invoke<string>("perform_update");
+                  toast.success(result);
+                  // 延迟后提示重启
+                  setTimeout(() => {
+                    toast.info("更新完成，请重启应用以使用新版本", {
+                      duration: 6000,
+                      action: {
+                        label: "重启",
+                        onClick: () => invoke<void>("restart_app"),
+                      },
+                    });
+                  }, 1000);
+                } catch (error) {
+                  toast.error(`更新失败: ${extractErrorMessage(error)}`);
+                }
+              },
+            },
+          });
+        }
+      } catch (error) {
+        // 静默处理更新检查失败，不影响用户体验
+        console.log("[App] Update check completed, no updates available");
+      }
+    };
+
+    checkForUpdates();
   }, [t]);
 
   // 切换应用时检测当前应用的环境变量冲突
