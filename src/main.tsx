@@ -25,7 +25,7 @@ try {
 }
 
 // 禁用右键菜单以防止出现"返回"、"刷新"等选项
-document.addEventListener('contextmenu', (e) => {
+document.addEventListener("contextmenu", (e) => {
   e.preventDefault();
 });
 

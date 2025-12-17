@@ -101,7 +101,12 @@ const QWEN_DEFAULT_CONFIG = JSON.stringify(
 
 type PresetEntry = {
   id: string;
-  preset: ProviderPreset | CodexProviderPreset | GeminiProviderPreset | GrokProviderPreset | QwenProviderPreset;
+  preset:
+    | ProviderPreset
+    | CodexProviderPreset
+    | GeminiProviderPreset
+    | GrokProviderPreset
+    | QwenProviderPreset;
 };
 
 interface ProviderFormProps {
@@ -392,7 +397,8 @@ export function ProviderForm({
     handleGeminiApiKeyChange: originalHandleGeminiApiKeyChange,
     handleGeminiBaseUrlChange: originalHandleGeminiBaseUrlChange,
     handleGeminiModelChange: originalHandleGeminiModelChange,
-    handleGeminiMaxOutputTokensChange: originalHandleGeminiMaxOutputTokensChange,
+    handleGeminiMaxOutputTokensChange:
+      originalHandleGeminiMaxOutputTokensChange,
     handleGeminiProxyHostChange,
     handleGeminiProxyPortChange,
     handleGeminiTlsRejectUnauthorizedChange,
@@ -426,7 +432,13 @@ export function ProviderForm({
 
   // 初始化 Gemini env 和 config（当预设被选择时）
   useEffect(() => {
-    if (appId !== "gemini" || !selectedPresetId || selectedPresetId === "custom" || isEditMode) return;
+    if (
+      appId !== "gemini" ||
+      !selectedPresetId ||
+      selectedPresetId === "custom" ||
+      isEditMode
+    )
+      return;
 
     try {
       const config = JSON.parse(form.watch("settingsConfig") || "{}");
@@ -675,7 +687,10 @@ export function ProviderForm({
       }
 
       // 添加待选模型
-      if (values.meta?.candidateModels && values.meta.candidateModels.length > 0) {
+      if (
+        values.meta?.candidateModels &&
+        values.meta.candidateModels.length > 0
+      ) {
         mergedMeta = {
           ...(mergedMeta ?? {}),
           candidateModels: values.meta.candidateModels,
@@ -686,15 +701,18 @@ export function ProviderForm({
     } else {
       // 编辑模式或没有自定义端点时，直接处理meta字段
       let mergedMeta = mergeProviderMeta(initialData?.meta, {});
-      
+
       // 添加待选模型
-      if (values.meta?.candidateModels && values.meta.candidateModels.length > 0) {
+      if (
+        values.meta?.candidateModels &&
+        values.meta.candidateModels.length > 0
+      ) {
         mergedMeta = {
           ...(mergedMeta ?? {}),
           candidateModels: values.meta.candidateModels,
         };
       }
-      
+
       payload.meta = mergedMeta;
     }
 
@@ -1135,7 +1153,9 @@ export function ProviderForm({
             isEndpointModalOpen={isEndpointModalOpen}
             onEndpointModalToggle={setIsEndpointModalOpen}
             onCustomEndpointsChange={
-              isEditMode ? undefined : (endpoints) => setDraftCustomEndpoints(endpoints)
+              isEditMode
+                ? undefined
+                : (endpoints) => setDraftCustomEndpoints(endpoints)
             }
             shouldShowModelField={true}
             model={(() => {
@@ -1152,13 +1172,18 @@ export function ProviderForm({
                 const v = value.trim();
                 if (!v) {
                   // 空值 -> 删除字段
-                  if (Object.prototype.hasOwnProperty.call(config, "defaultModel")) {
+                  if (
+                    Object.prototype.hasOwnProperty.call(config, "defaultModel")
+                  ) {
                     delete config.defaultModel;
                   }
                 } else {
                   config.defaultModel = v;
                 }
-                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+                form.setValue(
+                  "settingsConfig",
+                  JSON.stringify(config, null, 2),
+                );
               } catch {
                 // ignore
               }
@@ -1174,14 +1199,19 @@ export function ProviderForm({
             onAddModel={(value) => {
               try {
                 const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                const models: string[] = Array.isArray(config.models) ? config.models : [];
+                const models: string[] = Array.isArray(config.models)
+                  ? config.models
+                  : [];
                 const v = value.trim();
                 if (!v) return;
                 if (!models.includes(v)) {
                   models.push(v);
                 }
                 config.models = models;
-                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+                form.setValue(
+                  "settingsConfig",
+                  JSON.stringify(config, null, 2),
+                );
               } catch {
                 // ignore
               }
@@ -1189,7 +1219,9 @@ export function ProviderForm({
             onRemoveModel={(value) => {
               try {
                 const config = JSON.parse(form.watch("settingsConfig") || "{}");
-                const models: string[] = Array.isArray(config.models) ? config.models : [];
+                const models: string[] = Array.isArray(config.models)
+                  ? config.models
+                  : [];
                 const v = value.trim();
                 const next = models.filter((m) => m !== v);
                 config.models = next;
@@ -1197,7 +1229,10 @@ export function ProviderForm({
                   // 如果删除的是当前默认模型，则删除 defaultModel 字段，回退为“使用默认”
                   delete config.defaultModel;
                 }
-                form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+                form.setValue(
+                  "settingsConfig",
+                  JSON.stringify(config, null, 2),
+                );
               } catch {
                 // ignore
               }
@@ -1226,7 +1261,11 @@ export function ProviderForm({
             onBaseUrlChange={handleQwenBaseUrlChange}
             isEndpointModalOpen={isEndpointModalOpen}
             onEndpointModalToggle={setIsEndpointModalOpen}
-            onCustomEndpointsChange={isEditMode ? undefined : (endpoints) => setDraftCustomEndpoints(endpoints)}
+            onCustomEndpointsChange={
+              isEditMode
+                ? undefined
+                : (endpoints) => setDraftCustomEndpoints(endpoints)
+            }
             shouldShowModelField={true}
             model={(() => {
               try {

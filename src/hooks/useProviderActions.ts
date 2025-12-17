@@ -136,7 +136,11 @@ export function useProviderActions(activeApp: AppId) {
   const togglePin = useCallback(
     async (provider: Provider) => {
       try {
-        await providersApi.updatePinStatus(provider.id, !provider.isPinned, activeApp);
+        await providersApi.updatePinStatus(
+          provider.id,
+          !provider.isPinned,
+          activeApp,
+        );
         await queryClient.invalidateQueries({
           queryKey: ["providers", activeApp],
         });

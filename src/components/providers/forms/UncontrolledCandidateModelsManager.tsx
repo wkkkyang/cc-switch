@@ -9,7 +9,7 @@ interface UncontrolledCandidateModelsManagerProps {
 
 export function UncontrolledCandidateModelsManager({
   candidateModels,
-  onChange
+  onChange,
 }: UncontrolledCandidateModelsManagerProps) {
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -60,13 +60,14 @@ export function UncontrolledCandidateModelsManager({
 
   const deleteModel = (modelToDelete: string) => {
     const currentModels = Array.isArray(candidateModels) ? candidateModels : [];
-    const newModels = currentModels.filter(model => model !== modelToDelete);
+    const newModels = currentModels.filter((model) => model !== modelToDelete);
     onChange(newModels);
     toast.success("模型删除成功");
   };
 
   const copyToClipboard = (modelName: string) => {
-    navigator.clipboard.writeText(modelName)
+    navigator.clipboard
+      .writeText(modelName)
       .then(() => {
         toast.success("模型名称已复制到剪贴板");
       })
@@ -139,7 +140,10 @@ export function UncontrolledCandidateModelsManager({
                       key={model}
                       className="flex justify-between items-center px-2 py-1.5 border border-border rounded bg-muted/50 hover:bg-muted transition-colors"
                     >
-                      <div className="text-sm flex-1 truncate pr-2" title={model}>
+                      <div
+                        className="text-sm flex-1 truncate pr-2"
+                        title={model}
+                      >
                         {model}
                       </div>
                       <div className="flex gap-1.5 shrink-0">
@@ -165,7 +169,6 @@ export function UncontrolledCandidateModelsManager({
                 </div>
               )}
             </div>
-
           </div>
         </div>
       )}

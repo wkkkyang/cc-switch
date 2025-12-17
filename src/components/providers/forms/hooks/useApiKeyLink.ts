@@ -9,7 +9,12 @@ import type { QwenProviderPreset } from "@/config/qwenProviderPresets";
 
 type PresetEntry = {
   id: string;
-  preset: ProviderPreset | CodexProviderPreset | GeminiProviderPreset | GrokProviderPreset | QwenProviderPreset;
+  preset:
+    | ProviderPreset
+    | CodexProviderPreset
+    | GeminiProviderPreset
+    | GrokProviderPreset
+    | QwenProviderPreset;
 };
 
 interface UseApiKeyLinkProps {
@@ -76,7 +81,11 @@ export function useApiKeyLink({
 
   return {
     shouldShowApiKeyLink:
-      appId === "claude" || appId === "codex" || appId === "gemini" || appId === "grok" || appId === "qwen"
+      appId === "claude" ||
+      appId === "codex" ||
+      appId === "gemini" ||
+      appId === "grok" ||
+      appId === "qwen"
         ? shouldShowApiKeyLink
         : false,
     websiteUrl: getWebsiteUrl,

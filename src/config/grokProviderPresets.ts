@@ -21,14 +21,14 @@ export const grokProviderPresets: GrokProviderPreset[] = [
         "grok-3-latest",
         "grok-3-fast",
         "grok-3-mini",
-        "grok-3-mini-fast"
+        "grok-3-mini-fast",
       ],
-      settingsVersion: 2
+      settingsVersion: 2,
     },
     isOfficial: true,
     category: "official",
     icon: "grok",
-    iconColor: "#000000"
+    iconColor: "#000000",
   },
   {
     name: "Zhipu GLM",
@@ -36,14 +36,11 @@ export const grokProviderPresets: GrokProviderPreset[] = [
     settingsConfig: {
       apiKey: "",
       baseURL: "https://open.bigmodel.cn/api/coding/paas/v4",
-      models: [
-         "glm-4.6",
-         "glm-4.5-air"
-      ],
-      settingsVersion: 2
+      models: ["glm-4.6", "glm-4.5-air"],
+      settingsVersion: 2,
     },
     category: "cn_official",
     icon: "zhipu",
-    iconColor: "#0F62FE"
-  }
+    iconColor: "#0F62FE",
+  },
 ];

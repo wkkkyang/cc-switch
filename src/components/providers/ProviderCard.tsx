@@ -114,7 +114,8 @@ export function ProviderCard({
   };
 
   // 判断是否显示复制标签和蓝色名称
-  const shouldShowDuplicatedMark = provider.isDuplicated && !provider.isEditedAfterDuplication;
+  const shouldShowDuplicatedMark =
+    provider.isDuplicated && !provider.isEditedAfterDuplication;
 
   return (
     <div className="relative">
@@ -124,7 +125,9 @@ export function ProviderCard({
         className={cn(
           "provider-card glass-card relative overflow-hidden rounded-xl p-4 transition-all duration-300",
           "group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] hover:border-primary/50",
-          isCurrent ? "glass-card-active border-2 border-primary" : "hover:scale-[1.01]",
+          isCurrent
+            ? "glass-card-active border-2 border-primary"
+            : "hover:scale-[1.01]",
           dragHandleProps?.isDragging &&
             "cursor-grabbing border-primary shadow-lg scale-105 z-10",
         )}
@@ -158,13 +161,16 @@ export function ProviderCard({
 
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2 min-h-[20px]">
-                <h3 className={cn(
-                  "text-base font-semibold leading-none",
-                  shouldShowDuplicatedMark && "text-blue-500 dark:text-blue-400"
-                )}>
+                <h3
+                  className={cn(
+                    "text-base font-semibold leading-none",
+                    shouldShowDuplicatedMark &&
+                      "text-blue-500 dark:text-blue-400",
+                  )}
+                >
                   {provider.name}
                 </h3>
-                
+
                 {/* 官方合作伙伴标记 */}
                 {provider.category === "third_party" &&
                   provider.meta?.isPartner && (
@@ -177,7 +183,7 @@ export function ProviderCard({
                       ⭐
                     </span>
                   )}
-                
+
                 {/* 当前使用标签 */}
                 {isCurrent && (
                   <span
@@ -188,7 +194,7 @@ export function ProviderCard({
                     {t("provider.inUse")}
                   </span>
                 )}
-                
+
                 {/* 复制标签 */}
                 {shouldShowDuplicatedMark && (
                   <span
@@ -200,7 +206,7 @@ export function ProviderCard({
                   </span>
                 )}
               </div>
-              
+
               {/* API地址显示 */}
               {displayUrl && (
                 <button
@@ -242,7 +248,9 @@ export function ProviderCard({
                 onDuplicate={() => onDuplicate(provider)}
                 onConfigureUsage={() => onConfigureUsage(provider)}
                 onDelete={() => onDelete(provider)}
-                onTogglePin={onTogglePin ? () => onTogglePin(provider) : undefined}
+                onTogglePin={
+                  onTogglePin ? () => onTogglePin(provider) : undefined
+                }
               />
             </div>
           </div>

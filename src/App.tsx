@@ -49,7 +49,9 @@ function App() {
   // 当前视图
   const [currentView, setCurrentView] = useState<View>("providers");
   // 供应商筛选
-  const [selectedProviderName, setSelectedProviderName] = useState<string | null>(null);
+  const [selectedProviderName, setSelectedProviderName] = useState<
+    string | null
+  >(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
@@ -68,7 +70,7 @@ function App() {
 
   // 获取当前激活的供应商名称
   const currentProviderName = useMemo(() => {
-    if (!currentProviderId || !providers[currentProviderId]) return '';
+    if (!currentProviderId || !providers[currentProviderId]) return "";
     return providers[currentProviderId].name;
   }, [currentProviderId, providers]);
 
@@ -88,9 +90,9 @@ function App() {
     if (!selectedProviderName) return providers;
 
     return Object.fromEntries(
-      Object.entries(providers).filter(([_, provider]) =>
-        provider.name === selectedProviderName
-      )
+      Object.entries(providers).filter(
+        ([_, provider]) => provider.name === selectedProviderName,
+      ),
     );
   }, [providers, selectedProviderName]);
 
@@ -209,6 +211,12 @@ function App() {
     setSelectedProviderName(null);
   }, [activeApp]);
 
+  // 编辑供应商时的上下文信息
+  const editContext = useRef<{
+    originalName: string;
+    filterWasSingle: boolean;
+  } | null>(null);
+
   // 打开网站链接
   const handleOpenWebsite = async (url: string) => {
     try {
@@ -237,14 +245,50 @@ function App() {
     }
   };
 
+  // 点击编辑按钮时，记录编辑上下文（用于智能处理筛选条件）
+  const handleEditClick = (provider: Provider) => {
+    // 记录编辑前的状态
+    const filteredCount = Object.keys(filteredProviders).length;
+    editContext.current = {
+      originalName: provider.name,
+      filterWasSingle:
+        filteredCount === 1 && selectedProviderName === provider.name,
+    };
+    setEditingProvider(provider);
+  };
+
   // 编辑供应商
   const handleEditProvider = async (provider: Provider) => {
     // 如果是复制的供应商且尚未标记为已编辑，则标记为已编辑
     if (provider.isDuplicated && !provider.isEditedAfterDuplication) {
       provider.isEditedAfterDuplication = true;
     }
+
+    // 智能处理筛选条件（基于编辑前记录的上下文）
+    // 必须在 updateProvider 之前判断，因为 providers 随时会刷新
+    let needUpdateFilter = false;
+    let newName = provider.name;
+
+    if (editContext.current) {
+      const { originalName, filterWasSingle } = editContext.current;
+      const nameChanged = originalName !== provider.name;
+
+      // 如果编辑前筛选结果显示单个供应商，且名字被修改了，自动更新筛选条件
+      if (filterWasSingle && nameChanged) {
+        needUpdateFilter = true;
+      }
+
+      // 清空上下文
+      editContext.current = null;
+    }
+
     await updateProvider(provider);
     setEditingProvider(null);
+
+    // 更新筛选条件
+    if (needUpdateFilter) {
+      setSelectedProviderName(newName);
+    }
   };
 
   // 确认删除供应商
@@ -326,7 +370,7 @@ function App() {
     if (!providerListRef.current) return;
 
     const currentProviderElement = providerListRef.current.querySelector(
-      '.provider-card[data-current="true"]'
+      '.provider-card[data-current="true"]',
     ) as HTMLElement | null;
 
     if (currentProviderElement) {
@@ -362,15 +406,13 @@ function App() {
                 <DropdownMenuTrigger asChild>
                   <Button className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40">
                     <Filter className="mr-2 h-4 w-4" />
-                    {selectedProviderName
-                      ? `${selectedProviderName}`
-                      : "筛选"}
+                    {selectedProviderName ? `${selectedProviderName}` : "筛选"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-64 p-2">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => setSelectedProviderName(null)}
-                    className={`justify-center py-1.5 mb-2 text-sm ${!selectedProviderName ? 'bg-accent' : ''} border border-gray-300 dark:border-gray-500`}
+                    className={`justify-center py-1.5 mb-2 text-sm ${!selectedProviderName ? "bg-accent" : ""} border border-gray-300 dark:border-gray-500`}
                   >
                     {t("provider.allProviders", { defaultValue: "全部供应商" })}
                   </DropdownMenuItem>
@@ -384,9 +426,11 @@ function App() {
                           key={name}
                           onClick={() => setSelectedProviderName(name)}
                           className={`min-h-[40px] flex items-center justify-center p-1.5 rounded border border-gray-300 dark:border-gray-500 text-sm ${
-                            isSelected ? 'bg-accent' : ''
+                            isSelected ? "bg-accent" : ""
                           } ${
-                            isCurrent ? 'text-orange-500 dark:text-orange-400 font-medium hover:!text-orange-500 dark:hover:!text-orange-400' : ''
+                            isCurrent
+                              ? "text-orange-500 dark:text-orange-400 font-medium hover:!text-orange-500 dark:hover:!text-orange-400"
+                              : ""
                           }`}
                         >
                           <span className="text-center">{name}</span>
@@ -396,11 +440,13 @@ function App() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
+
               {/* 定位当前供应商按钮 */}
               <Button
                 onClick={scrollToCurrentProvider}
-                title={t("provider.locateCurrent", { defaultValue: "定位当前供应商" })}
+                title={t("provider.locateCurrent", {
+                  defaultValue: "定位当前供应商",
+                })}
                 className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40 h-9 w-9 p-0 flex items-center justify-center"
               >
                 <Target className="h-4 w-4" />
@@ -418,7 +464,7 @@ function App() {
                   appId={activeApp}
                   isLoading={isLoading}
                   onSwitch={switchProvider}
-                  onEdit={setEditingProvider}
+                  onEdit={handleEditClick}
                   onDelete={setConfirmDelete}
                   onDuplicate={handleDuplicateProvider}
                   onConfigureUsage={setUsageProvider}

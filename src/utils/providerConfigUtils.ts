@@ -182,7 +182,8 @@ export const getApiKeyFromConfig = (
 
       // 兼容旧格式：从 env.ANTHROPIC_AUTH_TOKEN / env.ANTHROPIC_API_KEY 读取
       const legacyEnv = (config as any)?.env ?? {};
-      const legacyToken = legacyEnv.ANTHROPIC_AUTH_TOKEN ?? legacyEnv.ANTHROPIC_API_KEY;
+      const legacyToken =
+        legacyEnv.ANTHROPIC_AUTH_TOKEN ?? legacyEnv.ANTHROPIC_API_KEY;
       return typeof legacyToken === "string" ? legacyToken : "";
     }
 
@@ -336,7 +337,8 @@ export const setApiKeyInConfig = (
         config.security.auth.apiKey = apiKey;
       } else if (createIfMissing) {
         if (!config.security) config.security = {};
-        if (!config.security.auth) config.security.auth = { selectedType: "openai" };
+        if (!config.security.auth)
+          config.security.auth = { selectedType: "openai" };
         config.security.auth.apiKey = apiKey;
       } else {
         return jsonString;

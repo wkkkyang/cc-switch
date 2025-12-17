@@ -27,7 +27,6 @@ export function EditProviderDialog({
 }: EditProviderDialogProps) {
   const { t } = useTranslation();
 
-
   const initialSettingsConfig = useMemo(() => {
     // Always prefer the saved provider configuration over live settings
     // This ensures manual edits (like removing mcpServers) are preserved

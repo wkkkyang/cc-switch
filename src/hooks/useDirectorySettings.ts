@@ -5,7 +5,13 @@ import { homeDir, join } from "@tauri-apps/api/path";
 import { settingsApi, type AppId } from "@/lib/api";
 import type { SettingsFormState } from "./useSettingsForm";
 
-type DirectoryKey = "appConfig" | "claude" | "codex" | "gemini" | "grok" | "qwen";
+type DirectoryKey =
+  | "appConfig"
+  | "claude"
+  | "codex"
+  | "gemini"
+  | "grok"
+  | "qwen";
 
 export interface ResolvedDirectories {
   appConfig: string;

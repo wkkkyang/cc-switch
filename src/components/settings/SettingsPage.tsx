@@ -250,7 +250,6 @@ export function SettingsPage({
                 <UpdateSection />
               </div>
             </TabsContent>
-
           </div>
         </Tabs>
       )}

@@ -29,7 +29,6 @@ export interface DeepLinkImportRequest {
   // MCP fields
   apps?: string; // "claude,codex,gemini"
 
-
   // Config file fields
   config?: string;
   configFormat?: string;
@@ -53,7 +52,7 @@ export type ImportResult =
       importedCount: number;
       importedIds: string[];
       failed: Array<{ id: string; error: string }>;
-    }
+    };
 
 export const deeplinkApi = {
   /**

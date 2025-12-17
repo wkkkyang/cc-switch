@@ -1,4 +1,13 @@
-import { BarChart3, Check, Copy, Edit, Pin, PinOff, Play, Trash2 } from "lucide-react";
+import {
+  BarChart3,
+  Check,
+  Copy,
+  Edit,
+  Pin,
+  PinOff,
+  Play,
+  Trash2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,10 +68,18 @@ export function ProviderActions({
             size="icon"
             variant="ghost"
             onClick={onTogglePin}
-            title={isPinned ? t("provider.unpin", { defaultValue: "取消置顶" }) : t("provider.pin", { defaultValue: "置顶" })}
+            title={
+              isPinned
+                ? t("provider.unpin", { defaultValue: "取消置顶" })
+                : t("provider.pin", { defaultValue: "置顶" })
+            }
             className={iconButtonClass}
           >
-            {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+            {isPinned ? (
+              <PinOff className="h-4 w-4" />
+            ) : (
+              <Pin className="h-4 w-4" />
+            )}
           </Button>
         )}
         <Button

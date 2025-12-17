@@ -62,7 +62,7 @@ export const providersApi = {
     return await invoke("update_provider_pin_status", {
       providerId,
       isPinned,
-      app: appId
+      app: appId,
     });
   },
 

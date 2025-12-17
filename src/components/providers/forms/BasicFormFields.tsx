@@ -42,13 +42,16 @@ export function BasicFormFields({ form }: BasicFormFieldsProps) {
   const currentCandidateModels = form.watch("meta.candidateModels") || [];
 
   // 更新待选模型列表
-  const updateCandidateModels = useCallback((models: string[]) => {
-    form.setValue("meta.candidateModels", models, {
-      shouldValidate: false,
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-  }, [form]);
+  const updateCandidateModels = useCallback(
+    (models: string[]) => {
+      form.setValue("meta.candidateModels", models, {
+        shouldValidate: false,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    },
+    [form],
+  );
 
   const handleIconSelect = (icon: string) => {
     const meta = getIconMetadata(icon);

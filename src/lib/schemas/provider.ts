@@ -56,9 +56,11 @@ export const providerSchema = z.object({
   icon: z.string().optional(),
   iconColor: z.string().optional(),
   // 元数据，包含待选模型等信息
-  meta: z.object({
-    candidateModels: z.array(z.string()).optional(),
-  }).optional(),
+  meta: z
+    .object({
+      candidateModels: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export type ProviderFormData = z.infer<typeof providerSchema>;

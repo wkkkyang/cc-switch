@@ -60,7 +60,7 @@ export function UpdateSection() {
       // 显示重启提示
       setTimeout(() => {
         const shouldRestart = confirm(
-          "更新已安装。现在重启应用以使用新版本吗？"
+          "更新已安装。现在重启应用以使用新版本吗？",
         );
         if (shouldRestart) {
           updateApi.restartApp();
@@ -81,7 +81,9 @@ export function UpdateSection() {
       <div className="bg-muted/50 rounded-lg p-4 space-y-3">
         <div>
           <p className="text-sm text-muted-foreground mb-1">当前版本</p>
-          <p className="text-lg font-semibold">{currentVersion || "加载中..."}</p>
+          <p className="text-lg font-semibold">
+            {currentVersion || "加载中..."}
+          </p>
         </div>
 
         {hasUpdate && newVersion && (

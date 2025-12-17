@@ -119,12 +119,16 @@ export function GrokFormFields({
 
           {/* 模型列表管理 */}
           <div className="space-y-2">
-            <FormLabel>{t("provider.form.models", { defaultValue: "模型列表" })}</FormLabel>
+            <FormLabel>
+              {t("provider.form.models", { defaultValue: "模型列表" })}
+            </FormLabel>
             <div className="flex items-center gap-2">
               <Input
                 value={newModel}
                 onChange={(e) => setNewModel(e.target.value)}
-                placeholder={t("provider.form.modelPlaceholder", { defaultValue: "例如：grok-4-1" })}
+                placeholder={t("provider.form.modelPlaceholder", {
+                  defaultValue: "例如：grok-4-1",
+                })}
                 className="flex-1"
               />
               <button

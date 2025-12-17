@@ -130,7 +130,8 @@ export function useGeminiConfigState({
       }
 
       // 从 env 中提取代理设置
-      const httpsProxy = (env as any).https_proxy || (env as any).HTTPS_PROXY || "";
+      const httpsProxy =
+        (env as any).https_proxy || (env as any).HTTPS_PROXY || "";
       if (typeof httpsProxy === "string" && httpsProxy) {
         const match = httpsProxy.match(/^https?:\/\/([^:]+):(\d+)/);
         if (match) {
@@ -258,10 +259,12 @@ export function useGeminiConfigState({
       // 同步到 config
       try {
         const configObj = geminiConfig ? JSON.parse(geminiConfig) : {};
-        
+
         // 如果输入为空，移除 maxOutputTokens 字段
         if (trimmed === "") {
-          if (Object.prototype.hasOwnProperty.call(configObj, "maxOutputTokens")) {
+          if (
+            Object.prototype.hasOwnProperty.call(configObj, "maxOutputTokens")
+          ) {
             delete configObj.maxOutputTokens;
           }
         } else {
@@ -271,13 +274,15 @@ export function useGeminiConfigState({
             configObj.maxOutputTokens = tokensNum;
           } else {
             // 如果解析失败或不是正数，移除该字段
-            if (Object.prototype.hasOwnProperty.call(configObj, "maxOutputTokens")) {
+            if (
+              Object.prototype.hasOwnProperty.call(configObj, "maxOutputTokens")
+            ) {
               delete configObj.maxOutputTokens;
             }
             return; // 不更新配置，因为输入无效
           }
         }
-        
+
         // 只有在有实际变化时才更新配置
         const newConfig = JSON.stringify(configObj, null, 2);
         if (newConfig !== geminiConfig) {
@@ -315,7 +320,7 @@ export function useGeminiConfigState({
       const envObj = envStringToObj(geminiEnv);
       const port = geminiProxyPort || "7890";
       const proxyUrl = trimmed ? `http://${trimmed}:${port}` : "";
-      
+
       // 更新环境变量
       if (trimmed) {
         envObj.https_proxy = proxyUrl;
@@ -326,7 +331,7 @@ export function useGeminiConfigState({
         delete envObj.http_proxy;
         setGeminiProxyPort("");
       }
-      
+
       const newEnv = envObjToString(envObj);
       setGeminiEnv(newEnv);
     },
@@ -342,7 +347,7 @@ export function useGeminiConfigState({
       const envObj = envStringToObj(geminiEnv);
       const host = geminiProxyHost || "127.0.0.1";
       const proxyUrl = trimmed ? `http://${host}:${trimmed}` : "";
-      
+
       // 更新环境变量
       if (trimmed) {
         envObj.https_proxy = proxyUrl;
@@ -352,7 +357,7 @@ export function useGeminiConfigState({
         delete envObj.https_proxy;
         delete envObj.http_proxy;
       }
-      
+
       const newEnv = envObjToString(envObj);
       setGeminiEnv(newEnv);
     },
@@ -396,8 +401,10 @@ export function useGeminiConfigState({
       }
 
       // 检查是否为官方供应商
-      const isOfficial = env.GOOGLE_GEMINI_BASE_URL === 'https://generativelanguage.googleapis.com/v1beta';
-      
+      const isOfficial =
+        env.GOOGLE_GEMINI_BASE_URL ===
+        "https://generativelanguage.googleapis.com/v1beta";
+
       // 处理模型名称 - 官方供应商默认为空
       let modelToSet = "";
       if (!isOfficial) {
@@ -408,11 +415,11 @@ export function useGeminiConfigState({
         }
       }
       setGeminiModel(modelToSet);
-      
+
       // 处理最大输出令牌数 - 官方供应商默认为空
       if (isOfficial) {
         setGeminiMaxOutputTokens("");
-      } else if (typeof config.maxOutputTokens === 'number') {
+      } else if (typeof config.maxOutputTokens === "number") {
         setGeminiMaxOutputTokens(String(config.maxOutputTokens));
       } else {
         setGeminiMaxOutputTokens("");

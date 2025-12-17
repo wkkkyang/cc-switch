@@ -99,25 +99,25 @@ export function GeminiFormFields({
     <>
       {/* API Key 输入框 */}
       {shouldShowApiKey && (
-          <ApiKeySection
-            value={apiKey}
-            onChange={onApiKeyChange}
-            category={category}
-            shouldShowLink={shouldShowApiKeyLink}
-            websiteUrl={websiteUrl}
-            isPartner={isPartner}
-            partnerPromotionKey={partnerPromotionKey}
-            placeholder={{
-              official: t("provider.form.gemini.apiKeyPlaceholder", {
-                defaultValue: "输入 Gemini API Key，将自动填充到配置",
-              }),
-              thirdParty: t("provider.form.gemini.apiKeyPlaceholder", {
-                defaultValue: "输入 Gemini API Key，将自动填充到配置",
-              }),
-            }}
-            // Gemini: 允许为官方供应商自定义 API Key（在新增与编辑中都可）
-            disabled={false}
-          />
+        <ApiKeySection
+          value={apiKey}
+          onChange={onApiKeyChange}
+          category={category}
+          shouldShowLink={shouldShowApiKeyLink}
+          websiteUrl={websiteUrl}
+          isPartner={isPartner}
+          partnerPromotionKey={partnerPromotionKey}
+          placeholder={{
+            official: t("provider.form.gemini.apiKeyPlaceholder", {
+              defaultValue: "输入 Gemini API Key，将自动填充到配置",
+            }),
+            thirdParty: t("provider.form.gemini.apiKeyPlaceholder", {
+              defaultValue: "输入 Gemini API Key，将自动填充到配置",
+            }),
+          }}
+          // Gemini: 允许为官方供应商自定义 API Key（在新增与编辑中都可）
+          disabled={false}
+        />
       )}
 
       {/* Base URL 输入框（统一使用与 Codex 相同的样式与交互） */}
@@ -146,7 +146,7 @@ export function GeminiFormFields({
                 </FormLabel>
                 <Input
                   id="gemini-model"
-                  value={model || ''}
+                  value={model || ""}
                   onChange={(e) => {
                     if (e.target.value !== model) {
                       onModelChange(e.target.value);
@@ -178,7 +178,7 @@ export function GeminiFormFields({
               </FormLabel>
               <Input
                 id="gemini-model"
-                value={model || ''}
+                value={model || ""}
                 onChange={(e) => {
                   if (e.target.value !== model) {
                     onModelChange(e.target.value);
@@ -236,10 +236,15 @@ export function GeminiFormFields({
                       type="checkbox"
                       id="gemini-tls-verify"
                       checked={tlsRejectUnauthorized}
-                      onChange={(e) => onTlsRejectUnauthorizedChange(e.target.checked)}
+                      onChange={(e) =>
+                        onTlsRejectUnauthorizedChange(e.target.checked)
+                      }
                       className="w-4 h-4 text-blue-500 bg-white dark:bg-gray-800 border-border-default rounded focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-2"
                     />
-                    <FormLabel htmlFor="gemini-tls-verify" className="mb-0 whitespace-nowrap">
+                    <FormLabel
+                      htmlFor="gemini-tls-verify"
+                      className="mb-0 whitespace-nowrap"
+                    >
                       {t("provider.form.gemini.tlsVerify", {
                         defaultValue: "TLS 验证",
                       })}
