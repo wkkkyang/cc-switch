@@ -22,12 +22,16 @@ import { getIconMetadata } from "@/icons/extracted/metadata";
 import { UncontrolledCandidateModelsManager } from "./UncontrolledCandidateModelsManager";
 import type { UseFormReturn } from "react-hook-form";
 import type { ProviderFormData } from "@/lib/schemas/provider";
+import { useProviderActions } from "@/hooks/useProviderActions";
 
 interface BasicFormFieldsProps {
   form: UseFormReturn<ProviderFormData>;
+  // 新增：同步回调，用于将模型填充到对应的输入框
+  onModelSync?: (model: string) => void;
+  appId?: string;
 }
 
-export function BasicFormFields({ form }: BasicFormFieldsProps) {
+export function BasicFormFields({ form, onModelSync, appId }: BasicFormFieldsProps) {
   const { t } = useTranslation();
   const [iconDialogOpen, setIconDialogOpen] = useState(false);
 
@@ -175,6 +179,8 @@ export function BasicFormFields({ form }: BasicFormFieldsProps) {
           <UncontrolledCandidateModelsManager
             candidateModels={currentCandidateModels}
             onChange={updateCandidateModels}
+            onSync={onModelSync}
+            appId={appId}
           />
           <FormMessage />
         </FormItem>

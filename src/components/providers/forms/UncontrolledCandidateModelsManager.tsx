@@ -5,11 +5,17 @@ import { ChevronDown } from "lucide-react";
 interface UncontrolledCandidateModelsManagerProps {
   candidateModels: string[];
   onChange: (models: string[]) => void;
+  // 新增：同步回调，用于将模型填充到对应的输入框
+  onSync?: (model: string) => void;
+  // 新增：当前应用ID，用于判断同步到哪个输入框
+  appId?: string;
 }
 
 export function UncontrolledCandidateModelsManager({
   candidateModels,
   onChange,
+  onSync,
+  appId,
 }: UncontrolledCandidateModelsManagerProps) {
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -147,6 +153,20 @@ export function UncontrolledCandidateModelsManager({
                         {model}
                       </div>
                       <div className="flex gap-1.5 shrink-0">
+                        {/* 同步按钮 - 仅在有回调函数时显示 */}
+                        {onSync && (
+                          <button
+                            type="button"
+                            className="px-2 py-0.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
+                            onClick={() => {
+                              onSync(model);
+                              // 不在这里显示提示，由 handleModelSync 统一处理
+                            }}
+                            title="同步到模型输入框"
+                          >
+                            ⚡
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="px-2 py-0.5 bg-primary text-primary-foreground rounded text-xs hover:bg-primary/90 transition-colors"

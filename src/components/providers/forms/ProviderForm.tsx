@@ -494,6 +494,82 @@ export function ProviderForm({
 
   const [isCommonConfigModalOpen, setIsCommonConfigModalOpen] = useState(false);
 
+  // 🎯 新增：同步待选模型到对应输入框的回调函数
+  const handleModelSync = useCallback(
+    (model: string) => {
+      // 根据应用类型填充到对应的模型输入框
+      if (appId === "claude") {
+        // Claude: 填充到默认模型（主模型）
+        const currentModel = claudeModel;
+        if (currentModel === model) {
+          // 值相同，不显示提示
+          return;
+        }
+        // 填充模型
+        handleModelChange("ANTHROPIC_MODEL", model);
+        // 统一提示格式
+        toast.success(`已同步模型: ${model}`);
+      } else if (appId === "codex") {
+        // Codex: 填充到模型名称
+        if (codexModelName === model) {
+          return;
+        }
+        handleCodexModelNameChange(model);
+        toast.success(`已同步模型: ${model}`);
+      } else if (appId === "gemini") {
+        // Gemini: 填充到主模型
+        if (geminiModel === model) {
+          return;
+        }
+        handleGeminiModelChange(model);
+        toast.success(`已同步模型: ${model}`);
+      } else if (appId === "grok") {
+        // Grok: 填充到默认模型
+        try {
+          const config = JSON.parse(form.watch("settingsConfig") || "{}");
+          const currentDefaultModel = config.defaultModel;
+          
+          if (currentDefaultModel === model) {
+            return;
+          }
+          
+          config.defaultModel = model;
+          form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+          toast.success(`已同步模型: ${model}`);
+        } catch (error) {
+          toast.error("同步失败，配置格式错误");
+        }
+      } else if (appId === "qwen") {
+        // Qwen: 填充到模型名称
+        try {
+          const config = JSON.parse(form.watch("settingsConfig") || "{}");
+          if (!config.model) config.model = {};
+          const currentName = config.model.name;
+          
+          if (currentName === model) {
+            return;
+          }
+          
+          config.model.name = model;
+          form.setValue("settingsConfig", JSON.stringify(config, null, 2));
+          toast.success(`已同步模型: ${model}`);
+        } catch (error) {
+          toast.error("同步失败，配置格式错误");
+        }
+      }
+    },
+    [
+      appId,
+      claudeModel,
+      codexModelName,
+      geminiModel,
+      handleModelChange,
+      handleGeminiModelChange,
+      handleCodexModelNameChange,
+      form,
+    ],
+  );
+
   const handleSubmit = (values: ProviderFormData) => {
     // 验证模板变量（仅 Claude 模式）
     if (appId === "claude" && templateValueEntries.length > 0) {
@@ -1097,7 +1173,11 @@ export function ProviderForm({
         )}
 
         {/* 基础字段 */}
-        <BasicFormFields form={form} />
+        <BasicFormFields 
+          form={form} 
+          onModelSync={handleModelSync}
+          appId={appId}
+        />
 
         {/* Claude 专属字段 */}
         {appId === "claude" && (
