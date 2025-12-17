@@ -128,12 +128,11 @@ pub async fn check_update() -> Result<CheckUpdateResponse, String> {
 /// 执行更新
 #[tauri::command]
 pub async fn perform_update(_app: AppHandle) -> Result<String, String> {
-    let install_path = if cfg!(windows) {
-        PathBuf::from(r"E:\Program Files\cc-switch-own\cc-switch.exe")
-    } else {
-        let home = std::env::var("HOME").map_err(|_| "无法获取主目录".to_string())?;
-        PathBuf::from(home).join("cc-switch")
-    };
+    // 获取当前运行的可执行文件路径
+    let current_exe = std::env::current_exe()
+        .map_err(|e| format!("无法获取当前执行文件路径: {e}"))?;
+    
+    let install_path = current_exe;
 
     // 使用与check_update相同的逻辑查找新版本
     let new_exe_path = if cfg!(windows) {
@@ -187,6 +186,28 @@ pub async fn perform_update(_app: AppHandle) -> Result<String, String> {
         ));
     }
 
+    // 验证新版本文件的版本号
+    let new_version_path = new_exe_path.with_file_name("version.txt");
+    if new_version_path.exists() {
+        match fs::read_to_string(&new_version_path) {
+            Ok(new_version) => {
+                let current_version = env!("CARGO_PKG_VERSION");
+                let new_version = new_version.trim();
+                
+                // 确保新版本确实比当前版本新
+                if !compare_versions(current_version, new_version) {
+                    return Err(format!(
+                        "新版本({})不比当前版本({})新，无法更新",
+                        new_version, current_version
+                    ));
+                }
+            }
+            Err(e) => {
+                log::warn!("无法读取新版本文件: {}", e);
+            }
+        }
+    }
+
     // 确保安装目录存在
     if let Some(parent) = install_path.parent() {
         fs::create_dir_all(parent)
@@ -201,8 +222,33 @@ pub async fn perform_update(_app: AppHandle) -> Result<String, String> {
     }
 
     // 复制新文件到安装位置
-    fs::copy(&new_exe_path, &install_path)
-        .map_err(|e| format!("复制文件失败: {e}"))?;
+    // 注意：在 Windows 上，如果文件正在运行，复制会失败
+    // 这种情况下需要使用临时文件重命名策略
+    if cfg!(windows) {
+        // Windows 特殊处理：使用临时文件
+        let temp_path = install_path.with_extension("exe.tmp");
+        
+        // 先复制到临时文件
+        fs::copy(&new_exe_path, &temp_path)
+            .map_err(|e| format!("复制到临时文件失败: {e}"))?;
+        
+        // 尝试重命名临时文件到目标文件
+        // 这在某些情况下可能仍然失败，但比直接复制更可靠
+        match fs::rename(&temp_path, &install_path) {
+            Ok(_) => {},
+            Err(_) => {
+                // 如果重命名失败，删除临时文件并返回错误
+                let _ = fs::remove_file(&temp_path);
+                return Err(format!(
+                    "无法覆盖正在运行的程序文件。请手动关闭程序后重试，或使用管理员权限运行。"
+                ));
+            }
+        }
+    } else {
+        // 非 Windows 系统直接复制
+        fs::copy(&new_exe_path, &install_path)
+            .map_err(|e| format!("复制文件失败: {e}"))?;
+    }
 
     Ok(format!(
         "更新成功！应用已更新到最新版本。请重启应用以使用新版本。"
