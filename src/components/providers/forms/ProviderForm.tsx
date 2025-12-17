@@ -1212,6 +1212,8 @@ export function ProviderForm({
             defaultSonnetModel={defaultSonnetModel}
             defaultOpusModel={defaultOpusModel}
             onModelChange={handleModelChange}
+            settingsConfig={form.watch("settingsConfig")}
+            onSettingsConfigChange={(config) => form.setValue("settingsConfig", config)}
             speedTestEndpoints={speedTestEndpoints}
           />
         )}

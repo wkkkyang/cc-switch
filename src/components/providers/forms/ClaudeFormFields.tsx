@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { useCallback } from "react";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import EndpointSpeedTest from "./EndpointSpeedTest";
@@ -50,6 +52,8 @@ interface ClaudeFormFieldsProps {
       | "ANTHROPIC_DEFAULT_OPUS_MODEL",
     value: string,
   ) => void;
+  settingsConfig: string; // 新增：用于批量同步
+  onSettingsConfigChange: (config: string) => void; // 新增：用于批量同步
 
   // Speed Test Endpoints
   speedTestEndpoints: EndpointCandidate[];
@@ -81,9 +85,52 @@ export function ClaudeFormFields({
   defaultSonnetModel,
   defaultOpusModel,
   onModelChange,
+  settingsConfig,
+  onSettingsConfigChange,
   speedTestEndpoints,
 }: ClaudeFormFieldsProps) {
   const { t } = useTranslation();
+
+  // 批量同步函数 - 直接操作配置，避免多次状态更新
+  const handleBatchSync = useCallback(() => {
+    if (!claudeModel || claudeModel.trim() === "") {
+      toast.warning("主模型为空，无法同步");
+      return;
+    }
+
+    try {
+      const config = settingsConfig ? JSON.parse(settingsConfig) : { env: {} };
+      if (!config.env) config.env = {};
+
+      // 一次性更新所有默认模型
+      config.env.ANTHROPIC_DEFAULT_HAIKU_MODEL = claudeModel;
+      config.env.ANTHROPIC_DEFAULT_SONNET_MODEL = claudeModel;
+      config.env.ANTHROPIC_DEFAULT_OPUS_MODEL = claudeModel;
+
+      onSettingsConfigChange(JSON.stringify(config, null, 2));
+      toast.success(`已将 "${claudeModel}" 同步到所有默认模型`);
+    } catch (error) {
+      toast.error("同步失败，请重试");
+    }
+  }, [claudeModel, settingsConfig, onSettingsConfigChange]);
+
+  // 批量清除函数
+  const handleBatchClear = useCallback(() => {
+    try {
+      const config = settingsConfig ? JSON.parse(settingsConfig) : { env: {} };
+      if (!config.env) config.env = {};
+
+      // 一次性清空所有默认模型
+      delete config.env.ANTHROPIC_DEFAULT_HAIKU_MODEL;
+      delete config.env.ANTHROPIC_DEFAULT_SONNET_MODEL;
+      delete config.env.ANTHROPIC_DEFAULT_OPUS_MODEL;
+
+      onSettingsConfigChange(JSON.stringify(config, null, 2));
+      toast.success("已清空所有默认模型");
+    } catch (error) {
+      toast.error("清除失败，请重试");
+    }
+  }, [settingsConfig, onSettingsConfigChange]);
 
   return (
     <>
@@ -168,9 +215,29 @@ export function ClaudeFormFields({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 主模型 */}
             <div className="space-y-2">
-              <FormLabel htmlFor="claudeModel">
-                {t("providerForm.anthropicModel", { defaultValue: "主模型" })}
-              </FormLabel>
+              <div className="flex items-center gap-2">
+                <FormLabel htmlFor="claudeModel">
+                  {t("providerForm.anthropicModel", { defaultValue: "主模型" })}
+                </FormLabel>
+                {/* 同步按钮 - 同步到三个默认模型 */}
+                <button
+                  type="button"
+                  className="px-2 py-0.5 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors flex items-center gap-1 mr-2"
+                  onClick={handleBatchSync}
+                  title="同步主模型到 Haiku/Sonnet/Opus 默认模型"
+                >
+                  ⚡ 同步
+                </button>
+                {/* 清除按钮 - 清空所有默认模型 */}
+                <button
+                  type="button"
+                  className="px-2 py-0.5 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors flex items-center gap-1"
+                  onClick={handleBatchClear}
+                  title="清空 Haiku/Sonnet/Opus 默认模型"
+                >
+                  🗑️ 清除
+                </button>
+              </div>
               <Input
                 id="claudeModel"
                 type="text"
