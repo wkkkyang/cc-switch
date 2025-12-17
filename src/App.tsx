@@ -311,6 +311,7 @@ function App() {
       websiteUrl: provider.websiteUrl,
       category: provider.category,
       sortIndex: newSortIndex, // 复制原 sortIndex + 1
+      notes: provider.notes, // 🎯 复制备注字段
       meta: provider.meta
         ? JSON.parse(JSON.stringify(provider.meta))
         : undefined, // 深拷贝
