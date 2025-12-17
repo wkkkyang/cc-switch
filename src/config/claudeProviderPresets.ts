@@ -365,4 +365,21 @@ export const providerPresets: ProviderPreset[] = [
     partnerPromotionKey: "packycode", // 促销信息 i18n key
     icon: "packycode",
   },
+  {
+    name: "Xiaomi MIMO",
+    websiteUrl: "https://platform.xiaomimimo.com/",
+    settingsConfig: {
+      env: {
+        ANTHROPIC_BASE_URL: "https://api.xiaomimimo.com/anthropic",
+        ANTHROPIC_AUTH_TOKEN: "",
+        ANTHROPIC_MODEL: "mimo-v2-flash",
+        ANTHROPIC_DEFAULT_HAIKU_MODEL: "mimo-v2-flash",
+        ANTHROPIC_DEFAULT_SONNET_MODEL: "mimo-v2-flash",
+        ANTHROPIC_DEFAULT_OPUS_MODEL: "mimo-v2-flash",
+      },
+    },
+    category: "cn_official",
+    icon: "xiaomi",
+    iconColor: "#FF6900",
+  },
 ];

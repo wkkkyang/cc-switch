@@ -618,7 +618,7 @@ dependencies = [
 
 [[package]]
 name = "cc-switch"
-version = "3.9.9"
+version = "3.9.10"
 dependencies = [
  "anyhow",
  "auto-launch",
