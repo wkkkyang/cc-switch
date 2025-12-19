@@ -45,7 +45,10 @@ export function useGeminiConfigState({
 
       // 先添加已知 key（按顺序）
       for (const key of priorityKeys) {
-        if (typeof envObj[key] === "string" && envObj[key]) {
+        if (
+          Object.prototype.hasOwnProperty.call(envObj, key) &&
+          typeof envObj[key] === "string"
+        ) {
           lines.push(`${key}=${envObj[key]}`);
           addedKeys.add(key);
         }
@@ -148,9 +151,52 @@ export function useGeminiConfigState({
     }
   }, [initialData, envObjToString]);
 
+  // 初始化默认配置（新建模式）
+  useEffect(() => {
+    if (initialData) return; // 编辑模式不使用默认配置
+
+    // 设置默认的 .env 配置
+    const defaultEnv = {
+      GEMINI_API_KEY: "",
+      NODE_TLS_REJECT_UNAUTHORIZED: "0",
+      https_proxy: "http://127.0.0.1:7890",
+      http_proxy: "http://127.0.0.1:7890",
+    };
+    setGeminiEnvState(envObjToString(defaultEnv));
+
+    // 设置默认的 config 配置
+    const defaultConfig = {
+      general: {
+        previewFeatures: true,
+      },
+      security: {
+        auth: {
+          selectedType: "gemini-api-key",
+        },
+      },
+      ui: {
+        hideWindowTitle: false,
+      },
+      model: "gemini-2.5-flash-lite",
+    };
+    setGeminiConfigState(JSON.stringify(defaultConfig, null, 2));
+
+    // 设置默认的表单字段值
+    setGeminiApiKey("");
+    setGeminiBaseUrl("");
+    setGeminiModel("gemini-2.5-flash-lite");
+    setGeminiMaxOutputTokens("");
+    setGeminiProxyHost("127.0.0.1");
+    setGeminiProxyPort("7890");
+    setGeminiTlsRejectUnauthorized(false); // 默认关闭 TLS 验证
+  }, [initialData, envObjToString]);
+
   // 从 geminiEnv 中提取并同步 API Key 和 Base URL（不包括 Model）
   // 模型字段仅在初始化和预设切换时加载，之后不自动同步以避免覆盖用户输入
+  // ✅ 修复：添加条件，仅在编辑模式或有initialData时才同步，避免新建模式读取已有数据
   useEffect(() => {
+    if (!initialData) return; // 新建模式不从env同步，避免读取已有供应商数据
+    
     const envObj = envStringToObj(geminiEnv);
     const extractedKey = envObj.GEMINI_API_KEY || "";
     const extractedBaseUrl = envObj.GOOGLE_GEMINI_BASE_URL || "";
@@ -161,7 +207,7 @@ export function useGeminiConfigState({
     if (extractedBaseUrl !== geminiBaseUrl) {
       setGeminiBaseUrl(extractedBaseUrl);
     }
-  }, [geminiEnv, envStringToObj, geminiApiKey, geminiBaseUrl]);
+  }, [geminiEnv, envStringToObj, geminiApiKey, geminiBaseUrl, initialData]);
 
   // 验证 Gemini Config JSON
   const validateGeminiConfig = useCallback((value: string): string => {
@@ -405,9 +451,13 @@ export function useGeminiConfigState({
         env.GOOGLE_GEMINI_BASE_URL ===
         "https://generativelanguage.googleapis.com/v1beta";
 
-      // 处理模型名称 - 官方供应商默认为空
+      // 处理模型名称 - 官方供应商使用默认模型
       let modelToSet = "";
-      if (!isOfficial) {
+      if (isOfficial) {
+        // 官方供应商使用默认模型
+        modelToSet = "gemini-2.5-flash-lite";
+      } else {
+        // 非官方供应商从配置中获取模型
         if (typeof config.model === "string") {
           modelToSet = config.model;
         } else if (typeof env.GEMINI_MODEL === "string") {
@@ -443,7 +493,8 @@ export function useGeminiConfigState({
       if (typeof tlsValue === "string") {
         setGeminiTlsRejectUnauthorized(tlsValue === "1");
       } else {
-        setGeminiTlsRejectUnauthorized(true);
+        // 默认关闭 TLS 验证
+        setGeminiTlsRejectUnauthorized(false);
       }
 
       // 预设切换视为非用户手动修改，清除手动标志

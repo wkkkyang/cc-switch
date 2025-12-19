@@ -189,9 +189,9 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
       );
     }
 
-    // 创建初始状态
+    // 创建初始状态 - ✅ 修复：确保使用当前的value值
     const state = EditorState.create({
-      doc: value,
+      doc: value,  // 这里会使用当前传入的value
       extensions,
     });
 
@@ -208,7 +208,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
       view.destroy();
       viewRef.current = null;
     };
-  }, [darkMode, rows, height, language, jsonLinter]); // 依赖项中不包含 onChange 和 placeholder，避免不必要的重建
+  }, [darkMode, rows, height, language, jsonLinter, value, onChange, placeholderText]); // ✅ 修复：添加value到依赖项
 
   // 当 value 从外部改变时更新编辑器内容
   useEffect(() => {

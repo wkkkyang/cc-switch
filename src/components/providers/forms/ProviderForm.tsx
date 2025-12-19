@@ -63,9 +63,24 @@ const CODEX_DEFAULT_CONFIG = JSON.stringify({ auth: {}, config: "" }, null, 2);
 const GEMINI_DEFAULT_CONFIG = JSON.stringify(
   {
     env: {
-      GOOGLE_GEMINI_BASE_URL: "",
       GEMINI_API_KEY: "",
-      GEMINI_MODEL: "gemini-2.5-flash-lite",
+      NODE_TLS_REJECT_UNAUTHORIZED: "0",
+      https_proxy: "http://127.0.0.1:7890",
+      http_proxy: "http://127.0.0.1:7890",
+    },
+    config: {
+      general: {
+        previewFeatures: true,
+      },
+      security: {
+        auth: {
+          selectedType: "gemini-api-key",
+        },
+      },
+      ui: {
+        hideWindowTitle: false,
+      },
+      model: "gemini-2.5-flash-lite",
     },
   },
   null,
@@ -430,6 +445,50 @@ export function ProviderForm({
     }
   }, [appId, geminiEnv, geminiConfig, envStringToObj, form]);
 
+  // ✅ 修复：确保新建模式下geminiEnv和geminiConfig正确初始化
+  // 这个useEffect确保在组件加载后，geminiEnv能够正确显示
+  useEffect(() => {
+    if (appId !== "gemini") return;
+    if (isEditMode) return; // 编辑模式由另一个useEffect处理
+
+    // 新建模式：确保使用默认的geminiEnv值
+    // 这会触发上面的同步useEffect，确保UI显示正确的env内容
+    if (geminiEnv && geminiConfig) {
+      // 已经通过useGeminiConfigState初始化，无需额外操作
+      return;
+    }
+
+    // 如果geminiEnv为空，强制重新初始化默认配置
+    if (!geminiEnv) {
+      const defaultEnv = {
+        GEMINI_API_KEY: "",
+        NODE_TLS_REJECT_UNAUTHORIZED: "0",
+        https_proxy: "http://127.0.0.1:7890",
+        http_proxy: "http://127.0.0.1:7890",
+      };
+      handleGeminiEnvChange(envObjToString(defaultEnv));
+    }
+
+    // 如果geminiConfig为空，强制重新初始化默认配置
+    if (!geminiConfig) {
+      const defaultConfig = {
+        general: {
+          previewFeatures: true,
+        },
+        security: {
+          auth: {
+            selectedType: "gemini-api-key",
+          },
+        },
+        ui: {
+          hideWindowTitle: false,
+        },
+        model: "gemini-2.5-flash-lite",
+      };
+      handleGeminiConfigChange(JSON.stringify(defaultConfig, null, 2));
+    }
+  }, [appId, isEditMode, geminiEnv, geminiConfig, envObjToString, handleGeminiEnvChange, handleGeminiConfigChange]);
+
   // 初始化 Gemini env 和 config（当预设被选择时）
   useEffect(() => {
     if (
@@ -440,15 +499,21 @@ export function ProviderForm({
     )
       return;
 
-    try {
-      const config = JSON.parse(form.watch("settingsConfig") || "{}");
-      if (config.env || config.config) {
-        resetGeminiConfig(config.env || {}, config.config || {});
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, [appId, selectedPresetId, isEditMode, form, resetGeminiConfig]);
+    // ✅ 修复：确保新建模式下不会读取form.watch中的已有数据
+    // 而是直接使用预设的配置
+    const entry = presetEntries.find((item) => item.id === selectedPresetId);
+    if (!entry || !("settingsConfig" in entry.preset)) return;
+
+    const preset = entry.preset as GeminiProviderPreset;
+    const env = (preset.settingsConfig as any)?.env ?? {};
+    const config = (preset.settingsConfig as any)?.config ?? {};
+
+    // 直接使用预设配置，不从form.watch读取可能存在的已有供应商数据
+    resetGeminiConfig(env, config);
+    
+    // 同时更新表单中的settingsConfig
+    form.setValue("settingsConfig", JSON.stringify(preset.settingsConfig, null, 2));
+  }, [appId, selectedPresetId, isEditMode, form, resetGeminiConfig, presetEntries]);
 
   // 包装 Gemini handlers 以同步 settingsConfig
   const handleGeminiApiKeyChange = useCallback(
@@ -963,6 +1028,12 @@ export function ProviderForm({
       return;
     }
 
+    if (!isEditMode) {
+      setGeminiProxyEnvEnabled(true);
+      setGeminiProxyEnvLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setGeminiProxyEnvLoading(true);
 
@@ -990,7 +1061,7 @@ export function ProviderForm({
     return () => {
       cancelled = true;
     };
-  }, [isGoogleOfficialGemini, handleGeminiEnvChange]);
+  }, [isGoogleOfficialGemini, isEditMode, handleGeminiEnvChange]);
 
   const handleGeminiProxyEnvToggle = useCallback(
     async (enabled: boolean) => {
@@ -1051,9 +1122,30 @@ export function ProviderForm({
         const template = getCodexCustomTemplate();
         resetCodexConfig(template.auth, template.config);
       }
-      // Gemini 自定义模式：重置为空配置
+      // Gemini 自定义模式：重置为默认配置，确保不使用已有供应商数据
       if (appId === "gemini") {
-        resetGeminiConfig({}, {});
+        // 使用独立的默认配置，不依赖 initialData
+        const defaultEnv = {
+          GEMINI_API_KEY: "",
+          NODE_TLS_REJECT_UNAUTHORIZED: "0",
+          https_proxy: "http://127.0.0.1:7890",
+          http_proxy: "http://127.0.0.1:7890",
+        };
+        const defaultConfig = {
+          general: {
+            previewFeatures: true,
+          },
+          security: {
+            auth: {
+              selectedType: "gemini-api-key",
+            },
+          },
+          ui: {
+            hideWindowTitle: false,
+          },
+          model: "gemini-2.5-flash-lite",
+        };
+        resetGeminiConfig(defaultEnv, defaultConfig);
       }
       return;
     }
@@ -1094,7 +1186,7 @@ export function ProviderForm({
       const env = (preset.settingsConfig as any)?.env ?? {};
       const config = (preset.settingsConfig as any)?.config ?? {};
 
-      // 重置 Gemini 配置
+      // 重置 Gemini 配置 - 使用预设的独立配置，不继承任何已有供应商数据
       resetGeminiConfig(env, config);
 
       // 更新表单其他字段
