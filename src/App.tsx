@@ -22,7 +22,7 @@ import {
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
 import { useProviderActions } from "@/hooks/useProviderActions";
 import { extractErrorMessage } from "@/utils/errorUtils";
-import { checkUpdate } from "@/lib/api/update";
+import { checkForUpdate, relaunchApp } from "@/lib/updater";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
@@ -180,36 +180,63 @@ function App() {
       try {
         // 稍微延迟，避免影响应用启动性能
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const response = await checkUpdate();
-        
-        if (response.has_update) {
-          toast.info(`发现新版本: ${response.new_version}`, {
-            duration: 8000,
-            description: `当前版本: ${response.current_version} → 新版本: ${response.new_version}`,
-            action: {
-              label: "更新",
-              onClick: async () => {
-                try {
-                  const result = await invoke<string>("perform_update");
-                  toast.success(result);
-                  // 延迟后提示重启
-                  setTimeout(() => {
-                    toast.info("更新完成，请重启应用以使用新版本", {
-                      duration: 6000,
-                      action: {
-                        label: "重启",
-                        onClick: () => invoke<void>("restart_app"),
-                      },
+
+        const result = await checkForUpdate();
+        if (result.status !== "available") return;
+
+        const { info, update } = result;
+
+        toast.info(`发现新版本: ${info.availableVersion}`, {
+          duration: 8000,
+          description: `当前版本: ${info.currentVersion} → 新版本: ${info.availableVersion}`,
+          action: {
+            label: "更新",
+            onClick: async () => {
+              let downloaded = 0;
+              const toastId = toast.loading("正在下载更新...", {
+                duration: Infinity,
+                description: "请勿关闭应用",
+              });
+
+              try {
+                await update.downloadAndInstall((evt) => {
+                  if (evt.event === "Started") {
+                    downloaded = 0;
+                    const total = evt.total ?? 0;
+                    toast.loading("正在下载更新...", {
+                      id: toastId,
+                      duration: Infinity,
+                      description: total
+                        ? `0 / ${Math.round(total / 1024 / 1024)} MB`
+                        : "开始下载...",
                     });
-                  }, 1000);
-                } catch (error) {
-                  toast.error(`更新失败: ${extractErrorMessage(error)}`);
-                }
-              },
+                    return;
+                  }
+
+                  if (evt.event === "Progress") {
+                    downloaded += evt.downloaded ?? 0;
+                    toast.loading("正在下载更新...", {
+                      id: toastId,
+                      duration: Infinity,
+                      description: `${Math.round(downloaded / 1024 / 1024)} MB` ,
+                    });
+                  }
+                });
+
+                toast.success("更新已完成，正在重启应用...", {
+                  id: toastId,
+                  duration: 2500,
+                });
+                await relaunchApp();
+              } catch (error) {
+                toast.error(`更新失败: ${extractErrorMessage(error)}`, {
+                  id: toastId,
+                  duration: 6000,
+                });
+              }
             },
-          });
-        }
+          },
+        });
       } catch (error) {
         // 静默处理更新检查失败，不影响用户体验
         console.log("[App] Update check completed, no updates available");
