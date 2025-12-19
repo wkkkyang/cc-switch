@@ -607,15 +607,32 @@ pub(crate) fn normalize_claude_models_in_value(settings: &mut Value) -> bool {
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
-    let target_haiku = current_haiku
-        .or_else(|| small_fast.clone())
-        .or_else(|| model.clone());
-    let target_sonnet = current_sonnet
-        .or_else(|| model.clone())
-        .or_else(|| small_fast.clone());
-    let target_opus = current_opus
-        .or_else(|| model.clone())
-        .or_else(|| small_fast.clone());
+    let should_backfill = small_fast.is_some();
+
+    let target_haiku = if should_backfill {
+        current_haiku
+            .clone()
+            .or_else(|| small_fast.clone())
+            .or_else(|| model.clone())
+    } else {
+        current_haiku.clone()
+    };
+    let target_sonnet = if should_backfill {
+        current_sonnet
+            .clone()
+            .or_else(|| model.clone())
+            .or_else(|| small_fast.clone())
+    } else {
+        current_sonnet.clone()
+    };
+    let target_opus = if should_backfill {
+        current_opus
+            .clone()
+            .or_else(|| model.clone())
+            .or_else(|| small_fast.clone())
+    } else {
+        current_opus.clone()
+    };
 
     if env.get("ANTHROPIC_DEFAULT_HAIKU_MODEL").is_none() {
         if let Some(v) = target_haiku {

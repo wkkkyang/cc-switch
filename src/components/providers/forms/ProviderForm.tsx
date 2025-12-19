@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -306,9 +306,16 @@ export function ProviderForm({
     }
   }, [appId, initialData, selectedPresetId, resetCodexConfig]);
 
+  const formResetKeyRef = useRef<string>("");
+
   useEffect(() => {
+    const resetKey = `${appId}:${providerId ?? "new"}`;
+    if (formResetKeyRef.current === resetKey) {
+      return;
+    }
+    formResetKeyRef.current = resetKey;
     form.reset(defaultValues);
-  }, [defaultValues, form]);
+  }, [appId, providerId, defaultValues, form]);
 
   const presetCategoryLabels: Record<string, string> = useMemo(
     () => ({
