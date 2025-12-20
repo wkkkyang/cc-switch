@@ -3,8 +3,8 @@ import {
   type UseQueryResult,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { providersApi, settingsApi, usageApi, type AppId } from "@/lib/api";
-import type { Provider, Settings, UsageResult } from "@/types";
+import { providersApi, settingsApi, type AppId } from "@/lib/api";
+import type { Provider, Settings } from "@/types";
 
 const sortProviders = (
   providers: Record<string, Provider>,
@@ -81,44 +81,4 @@ export const useSettingsQuery = (): UseQueryResult<Settings> => {
     queryKey: ["settings"],
     queryFn: async () => settingsApi.get(),
   });
-};
-
-export interface UseUsageQueryOptions {
-  enabled?: boolean;
-  autoQueryInterval?: number; // 自动查询间隔（分钟），0 表示禁用
-}
-
-export const useUsageQuery = (
-  providerId: string,
-  appId: AppId,
-  options?: UseUsageQueryOptions,
-) => {
-  const { enabled = true, autoQueryInterval = 0 } = options || {};
-
-  // 计算 staleTime：如果有自动刷新间隔，使用该间隔；否则默认 5 分钟
-  // 这样可以避免切换 app 页面时重复触发查询
-  const staleTime =
-    autoQueryInterval > 0
-      ? autoQueryInterval * 60 * 1000 // 与刷新间隔保持一致
-      : 5 * 60 * 1000; // 默认 5 分钟
-
-  const query = useQuery<UsageResult>({
-    queryKey: ["usage", providerId, appId],
-    queryFn: async () => usageApi.query(providerId, appId),
-    enabled: enabled && !!providerId,
-    refetchInterval:
-      autoQueryInterval > 0
-        ? Math.max(autoQueryInterval, 1) * 60 * 1000 // 最小1分钟
-        : false,
-    refetchIntervalInBackground: true, // 后台也继续定时查询
-    refetchOnWindowFocus: false,
-    retry: false,
-    staleTime, // 使用动态计算的缓存时间
-    gcTime: 10 * 60 * 1000, // 缓存保留 10 分钟（组件卸载后）
-  });
-
-  return {
-    ...query,
-    lastQueriedAt: query.dataUpdatedAt || null,
-  };
 };

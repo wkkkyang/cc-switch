@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { providersApi, settingsApi, type AppId } from "@/lib/api";
-import type { Provider, UsageScript } from "@/types";
+import type { Provider } from "@/types";
 import {
   useAddProviderMutation,
   useUpdateProviderMutation,
@@ -115,39 +115,6 @@ export function useProviderActions(activeApp: AppId) {
     [deleteProviderMutation],
   );
 
-  // 保存用量脚本
-  const saveUsageScript = useCallback(
-    async (provider: Provider, script: UsageScript) => {
-      try {
-        const updatedProvider: Provider = {
-          ...provider,
-          meta: {
-            ...provider.meta,
-            usage_script: script,
-          },
-        };
-
-        await providersApi.update(updatedProvider, activeApp);
-        await queryClient.invalidateQueries({
-          queryKey: ["providers", activeApp],
-        });
-        toast.success(
-          t("provider.usageSaved", {
-            defaultValue: "用量查询配置已保存",
-          }),
-        );
-      } catch (error) {
-        const detail =
-          extractErrorMessage(error) ||
-          t("provider.usageSaveFailed", {
-            defaultValue: "用量查询配置保存失败",
-          });
-        toast.error(detail);
-      }
-    },
-    [activeApp, queryClient, t],
-  );
-
   // 切换置顶状态
   const togglePin = useCallback(
     async (provider: Provider) => {
@@ -187,7 +154,6 @@ export function useProviderActions(activeApp: AppId) {
     updateProvider,
     switchProvider,
     deleteProvider,
-    saveUsageScript,
     togglePin,
     isLoading:
       addProviderMutation.isPending ||

@@ -30,7 +30,6 @@ import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
-import UsageScriptModal from "@/components/UsageScriptModal";
 import { DeepLinkImportDialog } from "@/components/DeepLinkImportDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,7 +56,6 @@ function App() {
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const providerListRef = useRef<HTMLDivElement>(null);
-  const [usageProvider, setUsageProvider] = useState<Provider | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Provider | null>(null);
   const [envConflicts, setEnvConflicts] = useState<EnvConflict[]>([]);
   const [showEnvBanner, setShowEnvBanner] = useState(false);
@@ -103,7 +101,6 @@ function App() {
     updateProvider,
     switchProvider,
     deleteProvider,
-    saveUsageScript,
     togglePin,
   } = useProviderActions(activeApp);
 
@@ -541,7 +538,6 @@ function App() {
                   onEdit={handleEditClick}
                   onDelete={setConfirmDelete}
                   onDuplicate={handleDuplicateProvider}
-                  onConfigureUsage={setUsageProvider}
                   onOpenWebsite={handleOpenWebsite}
                   onTogglePin={togglePin}
                   onCreate={() => setIsAddOpen(true)}
@@ -694,18 +690,6 @@ function App() {
         onSubmit={handleEditProvider}
         appId={activeApp}
       />
-
-      {usageProvider && (
-        <UsageScriptModal
-          provider={usageProvider}
-          appId={activeApp}
-          isOpen={Boolean(usageProvider)}
-          onClose={() => setUsageProvider(null)}
-          onSave={(script) => {
-            void saveUsageScript(usageProvider, script);
-          }}
-        />
-      )}
 
       <ConfirmDialog
         isOpen={Boolean(confirmDelete)}

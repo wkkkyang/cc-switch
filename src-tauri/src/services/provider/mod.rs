@@ -5,7 +5,6 @@
 mod endpoints;
 mod gemini_auth;
 mod live;
-mod usage;
 
 use indexmap::IndexMap;
 use regex::Regex;
@@ -14,7 +13,7 @@ use serde_json::Value;
 
 use crate::app_config::AppType;
 use crate::error::AppError;
-use crate::provider::{Provider, UsageResult};
+use crate::provider::Provider;
 use crate::services::mcp::McpService;
 use crate::settings::CustomEndpoint;
 use crate::store::AppState;
@@ -27,7 +26,6 @@ pub(crate) use live::write_live_snapshot;
 
 // Internal re-exports
 use live::write_gemini_live;
-use usage::validate_usage_script;
 
 /// Provider business logic service
 pub struct ProviderService;
@@ -313,42 +311,6 @@ impl ProviderService {
         }
     }
 
-    /// Query provider usage (re-export)
-    pub async fn query_usage(
-        state: &AppState,
-        app_type: AppType,
-        provider_id: &str,
-    ) -> Result<UsageResult, AppError> {
-        usage::query_usage(state, app_type, provider_id).await
-    }
-
-    /// Test usage script (re-export)
-    #[allow(clippy::too_many_arguments)]
-    pub async fn test_usage_script(
-        state: &AppState,
-        app_type: AppType,
-        provider_id: &str,
-        script_code: &str,
-        timeout: u64,
-        api_key: Option<&str>,
-        base_url: Option<&str>,
-        access_token: Option<&str>,
-        user_id: Option<&str>,
-    ) -> Result<UsageResult, AppError> {
-        usage::test_usage_script(
-            state,
-            app_type,
-            provider_id,
-            script_code,
-            timeout,
-            api_key,
-            base_url,
-            access_token,
-            user_id,
-        )
-        .await
-    }
-
     pub(crate) fn write_gemini_live(provider: &Provider) -> Result<(), AppError> {
         write_gemini_live(provider)
     }
@@ -418,13 +380,7 @@ impl ProviderService {
             }
         }
 
-        // Validate and clean UsageScript configuration (common for all app types)
-        if let Some(meta) = &provider.meta {
-            if let Some(usage_script) = &meta.usage_script {
-                validate_usage_script(usage_script)?;
-            }
-        }
-
+        
         Ok(())
     }
 

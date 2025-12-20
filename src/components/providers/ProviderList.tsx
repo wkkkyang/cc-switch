@@ -20,7 +20,6 @@ interface ProviderListProps {
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
   onDuplicate: (provider: Provider) => void;
-  onConfigureUsage?: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
   onTogglePin?: (provider: Provider) => void;
   onCreate?: () => void;
@@ -35,7 +34,6 @@ export function ProviderList({
   onEdit,
   onDelete,
   onDuplicate,
-  onConfigureUsage,
   onOpenWebsite,
   onTogglePin,
   onCreate,
@@ -82,12 +80,10 @@ export function ProviderList({
               key={provider.id}
               provider={provider}
               isCurrent={provider.id === currentProviderId}
-              appId={appId}
               onSwitch={onSwitch}
               onEdit={onEdit}
               onDelete={onDelete}
               onDuplicate={onDuplicate}
-              onConfigureUsage={onConfigureUsage}
               onOpenWebsite={onOpenWebsite}
               onTogglePin={onTogglePin}
             />
@@ -101,12 +97,10 @@ export function ProviderList({
 interface SortableProviderCardProps {
   provider: Provider;
   isCurrent: boolean;
-  appId: AppId;
   onSwitch: (provider: Provider) => void;
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
   onDuplicate: (provider: Provider) => void;
-  onConfigureUsage?: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
   onTogglePin?: (provider: Provider) => void;
 }
@@ -114,12 +108,10 @@ interface SortableProviderCardProps {
 function SortableProviderCard({
   provider,
   isCurrent,
-  appId,
   onSwitch,
   onEdit,
   onDelete,
   onDuplicate,
-  onConfigureUsage,
   onOpenWebsite,
   onTogglePin,
 }: SortableProviderCardProps) {
@@ -142,14 +134,10 @@ function SortableProviderCard({
       <ProviderCard
         provider={provider}
         isCurrent={isCurrent}
-        appId={appId}
         onSwitch={onSwitch}
         onEdit={onEdit}
         onDelete={onDelete}
         onDuplicate={onDuplicate}
-        onConfigureUsage={
-          onConfigureUsage ? (item) => onConfigureUsage(item) : () => undefined
-        }
         onOpenWebsite={onOpenWebsite}
         onTogglePin={onTogglePin}
         dragHandleProps={{

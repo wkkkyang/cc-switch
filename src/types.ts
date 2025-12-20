@@ -46,52 +46,10 @@ export interface EndpointCandidate {
   isCustom?: boolean;
 }
 
-// 用量查询脚本配置
-export interface UsageScript {
-  enabled: boolean; // 是否启用用量查询
-  language: "javascript"; // 脚本语言
-  code: string; // 脚本代码（JSON 格式配置）
-  timeout?: number; // 超时时间（秒，默认 10）
-  apiKey?: string; // 用量查询专用的 API Key（通用模板使用）
-  baseUrl?: string; // 用量查询专用的 Base URL（通用和 NewAPI 模板使用）
-  accessToken?: string; // 访问令牌（NewAPI 模板使用）
-  userId?: string; // 用户ID（NewAPI 模板使用）
-  autoQueryInterval?: number; // 自动查询间隔（单位：分钟，0 表示禁用）
-  autoIntervalMinutes?: number; // 自动查询间隔（分钟）- 别名字段
-  request?: {
-    // 请求配置
-    url?: string; // 请求 URL
-    method?: string; // HTTP 方法
-    headers?: Record<string, string>; // 请求头
-    body?: any; // 请求体
-  };
-}
-
-// 单个套餐用量数据
-export interface UsageData {
-  planName?: string; // 套餐名称（可选）
-  extra?: string; // 扩展字段，可自由补充需要展示的文本（可选）
-  isValid?: boolean; // 套餐是否有效（可选）
-  invalidMessage?: string; // 失效原因说明（可选，当 isValid 为 false 时显示）
-  total?: number; // 总额度（可选）
-  used?: number; // 已用额度（可选）
-  remaining?: number; // 剩余额度（可选）
-  unit?: string; // 单位（可选）
-}
-
-// 用量查询结果（支持多套餐）
-export interface UsageResult {
-  success: boolean;
-  data?: UsageData[]; // 改为数组，支持返回多个套餐
-  error?: string;
-}
-
 // 供应商元数据（字段名与后端一致，保持 snake_case）
 export interface ProviderMeta {
   // 自定义端点：以 URL 为键，值为端点信息
   custom_endpoints?: Record<string, CustomEndpoint>;
-  // 用量查询脚本配置
-  usage_script?: UsageScript;
   // 是否为官方合作伙伴
   isPartner?: boolean;
   // 合作伙伴促销 key（用于后端识别 PackyCode 等）

@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   Check,
   Copy,
   Edit,
@@ -18,7 +17,6 @@ interface ProviderActionsProps {
   onSwitch: () => void;
   onEdit: () => void;
   onDuplicate: () => void;
-  onConfigureUsage: () => void;
   onDelete: () => void;
   onTogglePin?: () => void;
 }
@@ -29,7 +27,6 @@ export function ProviderActions({
   onSwitch,
   onEdit,
   onDuplicate,
-  onConfigureUsage,
   onDelete,
   onTogglePin,
 }: ProviderActionsProps) {
@@ -100,16 +97,6 @@ export function ProviderActions({
           className={iconButtonClass}
         >
           <Copy className="h-4 w-4" />
-        </Button>
-
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onConfigureUsage}
-          title={t("provider.configureUsage")}
-          className={iconButtonClass}
-        >
-          <BarChart3 className="h-4 w-4" />
         </Button>
 
         <Button

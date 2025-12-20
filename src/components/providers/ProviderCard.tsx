@@ -6,11 +6,9 @@ import type {
   DraggableSyntheticListeners,
 } from "@dnd-kit/core";
 import type { Provider } from "@/types";
-import type { AppId } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ProviderActions } from "@/components/providers/ProviderActions";
 import { ProviderIcon } from "@/components/ProviderIcon";
-import UsageFooter from "@/components/UsageFooter";
 
 interface DragHandleProps {
   attributes: DraggableAttributes;
@@ -21,11 +19,9 @@ interface DragHandleProps {
 interface ProviderCardProps {
   provider: Provider;
   isCurrent: boolean;
-  appId: AppId;
   onSwitch: (provider: Provider) => void;
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
-  onConfigureUsage: (provider: Provider) => void;
   onOpenWebsite: (url: string) => void;
   onDuplicate: (provider: Provider) => void;
   onTogglePin?: (provider: Provider) => void;
@@ -70,11 +66,9 @@ const extractApiUrl = (provider: Provider, fallbackText: string) => {
 export function ProviderCard({
   provider,
   isCurrent,
-  appId,
   onSwitch,
   onEdit,
   onDelete,
-  onConfigureUsage,
   onOpenWebsite,
   onDuplicate,
   onTogglePin,
@@ -103,8 +97,6 @@ export function ProviderCard({
     // 其他情况（官网地址或请求地址）可点击
     return true;
   }, [provider.notes, displayUrl, fallbackUrlText]);
-
-  const usageEnabled = provider.meta?.usage_script?.enabled ?? false;
 
   const handleOpenWebsite = () => {
     if (!isClickableUrl) {
@@ -228,16 +220,7 @@ export function ProviderCard({
           </div>
 
           <div className="relative flex items-center ml-auto">
-            <div className="ml-auto transition-transform duration-200 group-hover:-translate-x-[12.25rem] group-focus-within:-translate-x-[12.25rem] sm:group-hover:-translate-x-[14.25rem] sm:group-focus-within:-translate-x-[14.25rem]">
-              <UsageFooter
-                provider={provider}
-                providerId={provider.id}
-                appId={appId}
-                usageEnabled={usageEnabled}
-                isCurrent={isCurrent}
-                inline={true}
-              />
-            </div>
+            <div className="ml-auto transition-transform duration-200 group-hover:-translate-x-[12.25rem] group-focus-within:-translate-x-[12.25rem] sm:group-hover:-translate-x-[14.25rem] sm:group-focus-within:-translate-x-[14.25rem]" />
 
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-all duration-200 translate-x-2 group-hover:translate-x-0 group-focus-within:translate-x-0">
               <ProviderActions
@@ -246,7 +229,6 @@ export function ProviderCard({
                 onSwitch={() => onSwitch(provider)}
                 onEdit={() => onEdit(provider)}
                 onDuplicate={() => onDuplicate(provider)}
-                onConfigureUsage={() => onConfigureUsage(provider)}
                 onDelete={() => onDelete(provider)}
                 onTogglePin={
                   onTogglePin ? () => onTogglePin(provider) : undefined
