@@ -20,20 +20,6 @@ pub async fn open_external(app: AppHandle, url: String) -> Result<bool, String> 
     Ok(true)
 }
 
-/// 检查更新
-#[tauri::command]
-pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
-    handle
-        .opener()
-        .open_url(
-            "https://github.com/farion1231/cc-switch/releases/latest",
-            None::<String>,
-        )
-        .map_err(|e| format!("打开更新页面失败: {e}"))?;
-
-    Ok(true)
-}
-
 /// 判断是否为便携版（绿色版）运行
 #[tauri::command]
 pub async fn is_portable_mode() -> Result<bool, String> {

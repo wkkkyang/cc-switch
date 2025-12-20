@@ -16,7 +16,6 @@ import { ThemeSettings } from "@/components/settings/ThemeSettings";
 import { WindowSettings } from "@/components/settings/WindowSettings";
 import { DirectorySettings } from "@/components/settings/DirectorySettings";
 import { ImportExportSection } from "@/components/settings/ImportExportSection";
-import { UpdateSection } from "@/components/settings/UpdateSection";
 import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useTranslation } from "react-i18next";
@@ -247,7 +246,9 @@ export function SettingsPage({
                 <h3 className="text-lg font-semibold mb-4">
                   {t("settings.about", { defaultValue: "关于应用" })}
                 </h3>
-                <UpdateSection />
+                <p className="text-sm text-muted-foreground mb-6">
+                  CC Switch - All-in-one AI CLI provider manager
+                </p>
               </div>
             </TabsContent>
           </div>

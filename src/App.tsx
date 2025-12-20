@@ -22,7 +22,6 @@ import {
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
 import { useProviderActions } from "@/hooks/useProviderActions";
 import { extractErrorMessage } from "@/utils/errorUtils";
-import { checkForUpdate, relaunchApp } from "@/lib/updater";
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
@@ -169,78 +168,6 @@ function App() {
     };
 
     checkMigration();
-  }, [t]);
-
-  // 应用启动时自动检测更新（仅在有新版本时提示）
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        // 稍微延迟，避免影响应用启动性能
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const result = await checkForUpdate();
-        if (result.status !== "available") return;
-
-        const { info, update } = result;
-
-        toast.info(`发现新版本: ${info.availableVersion}`, {
-          duration: 8000,
-          description: `当前版本: ${info.currentVersion} → 新版本: ${info.availableVersion}`,
-          action: {
-            label: "更新",
-            onClick: async () => {
-              let downloaded = 0;
-              const toastId = toast.loading("正在下载更新...", {
-                duration: Infinity,
-                description: "请勿关闭应用",
-              });
-
-              try {
-                await update.downloadAndInstall((evt) => {
-                  if (evt.event === "Started") {
-                    downloaded = 0;
-                    const total = evt.total ?? 0;
-                    toast.loading("正在下载更新...", {
-                      id: toastId,
-                      duration: Infinity,
-                      description: total
-                        ? `0 / ${Math.round(total / 1024 / 1024)} MB`
-                        : "开始下载...",
-                    });
-                    return;
-                  }
-
-                  if (evt.event === "Progress") {
-                    downloaded += evt.downloaded ?? 0;
-                    toast.loading("正在下载更新...", {
-                      id: toastId,
-                      duration: Infinity,
-                      description: `${Math.round(downloaded / 1024 / 1024)} MB` ,
-                    });
-                  }
-                });
-
-                toast.success("更新已完成，正在重启应用...", {
-                  id: toastId,
-                  duration: 2500,
-                });
-                await relaunchApp();
-              } catch (error) {
-                toast.error(`更新失败: ${extractErrorMessage(error)}`, {
-                  id: toastId,
-                  duration: 6000,
-                });
-              }
-            },
-          },
-        });
-      } catch (error) {
-        // 静默处理更新检查失败，不影响用户体验
-        console.log("[App] Update check completed, no updates available");
-      }
-    };
-
-    checkForUpdates();
   }, [t]);
 
   // 切换应用时检测当前应用的环境变量冲突
